@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		90462AF7182C98A200C077E4 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90462AF6182C98A200C077E4 /* opencv2.framework */; };
+		90462AFB182CB5B900C077E4 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */; };
 		90DFA4FB181B56BC00145DB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FA181B56BC00145DB9 /* Foundation.framework */; };
 		90DFA4FD181B56BC00145DB9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FC181B56BC00145DB9 /* CoreGraphics.framework */; };
 		90DFA4FF181B56BC00145DB9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FE181B56BC00145DB9 /* UIKit.framework */; };
@@ -15,7 +17,7 @@
 		90DFA50B181B56BC00145DB9 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 90DFA50A181B56BC00145DB9 /* AppDelegate.m */; };
 		90DFA50E181B56BC00145DB9 /* Main_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DFA50C181B56BC00145DB9 /* Main_iPhone.storyboard */; };
 		90DFA511181B56BC00145DB9 /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 90DFA50F181B56BC00145DB9 /* Main_iPad.storyboard */; };
-		90DFA514181B56BC00145DB9 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 90DFA513181B56BC00145DB9 /* ViewController.m */; };
+		90DFA514181B56BC00145DB9 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 90DFA513181B56BC00145DB9 /* ViewController.mm */; };
 		90DFA516181B56BC00145DB9 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 90DFA515181B56BC00145DB9 /* Images.xcassets */; };
 		90DFA51D181B56BC00145DB9 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA51C181B56BC00145DB9 /* XCTest.framework */; };
 		90DFA51E181B56BC00145DB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FA181B56BC00145DB9 /* Foundation.framework */; };
@@ -35,6 +37,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		90462AF6182C98A200C077E4 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ArmKeyBoard/opencv2.framework; sourceTree = "<group>"; };
+		90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		90DFA4F7181B56BC00145DB9 /* ArmKeyBoard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArmKeyBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		90DFA4FA181B56BC00145DB9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		90DFA4FC181B56BC00145DB9 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -48,7 +52,7 @@
 		90DFA50D181B56BC00145DB9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPhone.storyboard; sourceTree = "<group>"; };
 		90DFA510181B56BC00145DB9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main_iPad.storyboard; sourceTree = "<group>"; };
 		90DFA512181B56BC00145DB9 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		90DFA513181B56BC00145DB9 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		90DFA513181B56BC00145DB9 /* ViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		90DFA515181B56BC00145DB9 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		90DFA51B181B56BC00145DB9 /* ArmKeyBoardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ArmKeyBoardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		90DFA51C181B56BC00145DB9 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -62,6 +66,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				90462AFB182CB5B900C077E4 /* MobileCoreServices.framework in Frameworks */,
+				90462AF7182C98A200C077E4 /* opencv2.framework in Frameworks */,
 				90DFA4FD181B56BC00145DB9 /* CoreGraphics.framework in Frameworks */,
 				90DFA4FF181B56BC00145DB9 /* UIKit.framework in Frameworks */,
 				90DFA4FB181B56BC00145DB9 /* Foundation.framework in Frameworks */,
@@ -103,6 +109,8 @@
 		90DFA4F9181B56BC00145DB9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */,
+				90462AF6182C98A200C077E4 /* opencv2.framework */,
 				90DFA4FA181B56BC00145DB9 /* Foundation.framework */,
 				90DFA4FC181B56BC00145DB9 /* CoreGraphics.framework */,
 				90DFA4FE181B56BC00145DB9 /* UIKit.framework */,
@@ -119,7 +127,7 @@
 				90DFA50C181B56BC00145DB9 /* Main_iPhone.storyboard */,
 				90DFA50F181B56BC00145DB9 /* Main_iPad.storyboard */,
 				90DFA512181B56BC00145DB9 /* ViewController.h */,
-				90DFA513181B56BC00145DB9 /* ViewController.m */,
+				90DFA513181B56BC00145DB9 /* ViewController.mm */,
 				90DFA515181B56BC00145DB9 /* Images.xcassets */,
 				90DFA501181B56BC00145DB9 /* Supporting Files */,
 			);
@@ -253,7 +261,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				90DFA514181B56BC00145DB9 /* ViewController.m in Sources */,
+				90DFA514181B56BC00145DB9 /* ViewController.mm in Sources */,
 				90DFA50B181B56BC00145DB9 /* AppDelegate.m in Sources */,
 				90DFA507181B56BC00145DB9 /* main.m in Sources */,
 			);
@@ -318,7 +326,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -358,7 +366,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_INCLUDING_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -392,9 +400,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/tangkk/Documents/workspace/iOS/ArmKeyBoard/ArmKeyBoard,
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ArmKeyBoard/ArmKeyBoard-Prefix.pch";
 				INFOPLIST_FILE = "ArmKeyBoard/ArmKeyBoard-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -405,9 +418,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/tangkk/Documents/workspace/iOS/ArmKeyBoard/ArmKeyBoard,
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ArmKeyBoard/ArmKeyBoard-Prefix.pch";
 				INFOPLIST_FILE = "ArmKeyBoard/ArmKeyBoard-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -474,6 +492,7 @@
 				90DFA52E181B56BC00145DB9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		90DFA52F181B56BC00145DB9 /* Build configuration list for PBXNativeTarget "ArmKeyBoardTests" */ = {
 			isa = XCConfigurationList;
@@ -482,6 +501,7 @@
 				90DFA531181B56BC00145DB9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
