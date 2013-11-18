@@ -9,6 +9,20 @@
 /* Begin PBXBuildFile section */
 		90462AF7182C98A200C077E4 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90462AF6182C98A200C077E4 /* opencv2.framework */; };
 		90462AFB182CB5B900C077E4 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */; };
+		9078F3501839B1DA00EA23F5 /* AssignmentTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F3491839B1DA00EA23F5 /* AssignmentTable.m */; };
+		9078F3511839B1DA00EA23F5 /* AssignmentTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F3491839B1DA00EA23F5 /* AssignmentTable.m */; };
+		9078F3521839B1DA00EA23F5 /* MIDINote.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34B1839B1DA00EA23F5 /* MIDINote.m */; };
+		9078F3531839B1DA00EA23F5 /* MIDINote.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34B1839B1DA00EA23F5 /* MIDINote.m */; };
+		9078F3541839B1DA00EA23F5 /* NoteNumDict.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34D1839B1DA00EA23F5 /* NoteNumDict.m */; };
+		9078F3551839B1DA00EA23F5 /* NoteNumDict.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34D1839B1DA00EA23F5 /* NoteNumDict.m */; };
+		9078F3561839B1DA00EA23F5 /* VirtualInstrument.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34F1839B1DA00EA23F5 /* VirtualInstrument.m */; };
+		9078F3571839B1DA00EA23F5 /* VirtualInstrument.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34F1839B1DA00EA23F5 /* VirtualInstrument.m */; };
+		9078F3591839B20500EA23F5 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9078F3581839B20500EA23F5 /* AudioToolbox.framework */; };
+		9078F35B1839B20C00EA23F5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9078F35A1839B20C00EA23F5 /* AVFoundation.framework */; };
+		9078F3601839B24000EA23F5 /* Piano.aupreset in Resources */ = {isa = PBXBuildFile; fileRef = 9078F35F1839B24000EA23F5 /* Piano.aupreset */; };
+		9078F3611839B24000EA23F5 /* Piano.aupreset in Resources */ = {isa = PBXBuildFile; fileRef = 9078F35F1839B24000EA23F5 /* Piano.aupreset */; };
+		9078F9181839B2E300EA23F5 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 9078F9171839B2E300EA23F5 /* Sounds */; };
+		9078F9191839B2E300EA23F5 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 9078F9171839B2E300EA23F5 /* Sounds */; };
 		90DFA4FB181B56BC00145DB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FA181B56BC00145DB9 /* Foundation.framework */; };
 		90DFA4FD181B56BC00145DB9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FC181B56BC00145DB9 /* CoreGraphics.framework */; };
 		90DFA4FF181B56BC00145DB9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FE181B56BC00145DB9 /* UIKit.framework */; };
@@ -39,6 +53,18 @@
 /* Begin PBXFileReference section */
 		90462AF6182C98A200C077E4 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ArmKeyBoard/opencv2.framework; sourceTree = "<group>"; };
 		90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		9078F3481839B1DA00EA23F5 /* AssignmentTable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AssignmentTable.h; sourceTree = "<group>"; };
+		9078F3491839B1DA00EA23F5 /* AssignmentTable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AssignmentTable.m; sourceTree = "<group>"; };
+		9078F34A1839B1DA00EA23F5 /* MIDINote.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDINote.h; sourceTree = "<group>"; };
+		9078F34B1839B1DA00EA23F5 /* MIDINote.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDINote.m; sourceTree = "<group>"; };
+		9078F34C1839B1DA00EA23F5 /* NoteNumDict.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NoteNumDict.h; sourceTree = "<group>"; };
+		9078F34D1839B1DA00EA23F5 /* NoteNumDict.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NoteNumDict.m; sourceTree = "<group>"; };
+		9078F34E1839B1DA00EA23F5 /* VirtualInstrument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VirtualInstrument.h; sourceTree = "<group>"; };
+		9078F34F1839B1DA00EA23F5 /* VirtualInstrument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VirtualInstrument.m; sourceTree = "<group>"; };
+		9078F3581839B20500EA23F5 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		9078F35A1839B20C00EA23F5 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		9078F35F1839B24000EA23F5 /* Piano.aupreset */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Piano.aupreset; sourceTree = "<group>"; };
+		9078F9171839B2E300EA23F5 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = SOURCE_ROOT; };
 		90DFA4F7181B56BC00145DB9 /* ArmKeyBoard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArmKeyBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		90DFA4FA181B56BC00145DB9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		90DFA4FC181B56BC00145DB9 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -66,6 +92,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9078F35B1839B20C00EA23F5 /* AVFoundation.framework in Frameworks */,
+				9078F3591839B20500EA23F5 /* AudioToolbox.framework in Frameworks */,
 				90462AFB182CB5B900C077E4 /* MobileCoreServices.framework in Frameworks */,
 				90462AF7182C98A200C077E4 /* opencv2.framework in Frameworks */,
 				90DFA4FD181B56BC00145DB9 /* CoreGraphics.framework in Frameworks */,
@@ -90,6 +118,8 @@
 		90DFA4EE181B56BC00145DB9 = {
 			isa = PBXGroup;
 			children = (
+				9078F35F1839B24000EA23F5 /* Piano.aupreset */,
+				9078F9171839B2E300EA23F5 /* Sounds */,
 				90DFA500181B56BC00145DB9 /* ArmKeyBoard */,
 				90DFA522181B56BC00145DB9 /* ArmKeyBoardTests */,
 				90DFA4F9181B56BC00145DB9 /* Frameworks */,
@@ -109,6 +139,8 @@
 		90DFA4F9181B56BC00145DB9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9078F35A1839B20C00EA23F5 /* AVFoundation.framework */,
+				9078F3581839B20500EA23F5 /* AudioToolbox.framework */,
 				90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */,
 				90462AF6182C98A200C077E4 /* opencv2.framework */,
 				90DFA4FA181B56BC00145DB9 /* Foundation.framework */,
@@ -128,6 +160,14 @@
 				90DFA50F181B56BC00145DB9 /* Main_iPad.storyboard */,
 				90DFA512181B56BC00145DB9 /* ViewController.h */,
 				90DFA513181B56BC00145DB9 /* ViewController.mm */,
+				9078F3481839B1DA00EA23F5 /* AssignmentTable.h */,
+				9078F3491839B1DA00EA23F5 /* AssignmentTable.m */,
+				9078F34A1839B1DA00EA23F5 /* MIDINote.h */,
+				9078F34B1839B1DA00EA23F5 /* MIDINote.m */,
+				9078F34C1839B1DA00EA23F5 /* NoteNumDict.h */,
+				9078F34D1839B1DA00EA23F5 /* NoteNumDict.m */,
+				9078F34E1839B1DA00EA23F5 /* VirtualInstrument.h */,
+				9078F34F1839B1DA00EA23F5 /* VirtualInstrument.m */,
 				90DFA515181B56BC00145DB9 /* Images.xcassets */,
 				90DFA501181B56BC00145DB9 /* Supporting Files */,
 			);
@@ -239,10 +279,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9078F9181839B2E300EA23F5 /* Sounds in Resources */,
 				90DFA511181B56BC00145DB9 /* Main_iPad.storyboard in Resources */,
 				90DFA516181B56BC00145DB9 /* Images.xcassets in Resources */,
 				90DFA50E181B56BC00145DB9 /* Main_iPhone.storyboard in Resources */,
 				90DFA505181B56BC00145DB9 /* InfoPlist.strings in Resources */,
+				9078F3601839B24000EA23F5 /* Piano.aupreset in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -250,6 +292,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9078F9191839B2E300EA23F5 /* Sounds in Resources */,
+				9078F3611839B24000EA23F5 /* Piano.aupreset in Resources */,
 				90DFA527181B56BC00145DB9 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -261,8 +305,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9078F3521839B1DA00EA23F5 /* MIDINote.m in Sources */,
 				90DFA514181B56BC00145DB9 /* ViewController.mm in Sources */,
+				9078F3561839B1DA00EA23F5 /* VirtualInstrument.m in Sources */,
+				9078F3501839B1DA00EA23F5 /* AssignmentTable.m in Sources */,
 				90DFA50B181B56BC00145DB9 /* AppDelegate.m in Sources */,
+				9078F3541839B1DA00EA23F5 /* NoteNumDict.m in Sources */,
 				90DFA507181B56BC00145DB9 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -272,6 +320,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				90DFA529181B56BC00145DB9 /* ArmKeyBoardTests.m in Sources */,
+				9078F3511839B1DA00EA23F5 /* AssignmentTable.m in Sources */,
+				9078F3571839B1DA00EA23F5 /* VirtualInstrument.m in Sources */,
+				9078F3551839B1DA00EA23F5 /* NoteNumDict.m in Sources */,
+				9078F3531839B1DA00EA23F5 /* MIDINote.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

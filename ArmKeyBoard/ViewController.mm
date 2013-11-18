@@ -7,11 +7,19 @@
 //
 
 #import "ViewController.h"
+
+// Import the graphics infrastructure
 #import <MobileCoreServices/UTCoreTypes.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #import "opencv2/opencv.hpp"
+
+// Import the musical infrastructure
+#import "MIDINote.h"
+#import "NoteNumDict.h"
+#import "VirtualInstrument.h"
+#import "AssignmentTable.h"
 
 //#define CANNY
 
@@ -39,7 +47,13 @@ using namespace std;
     float heightRatio;
     float distRatio;
 }
+
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
+
+/* Virtual Instrument */
+@property (readonly) VirtualInstrument *VI;
+@property (readonly) NoteNumDict *Dict;
+@property (readonly) AssignmentTable *AST;
 
 @end
 
@@ -49,6 +63,9 @@ using namespace std;
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    
+    // Initialize musical infrastructures
+    [self musInfrastructureSetup];
     
     // Initialize opencv variables
     thresh = 100;
@@ -62,7 +79,23 @@ using namespace std;
     
     // Initialize drawing variables
     brush = 2;
-    [self.view addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(clearImage)]];
+    [self.view addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)]];
+}
+
+- (void) musInfrastructureSetup {
+    if (_VI == nil) {
+        _VI = [[VirtualInstrument alloc] init];
+        [_VI setInstrument:@"Piano" withInstrumentID:Piano];
+    }
+    
+    if (_Dict == nil) {
+        _Dict = [[NoteNumDict alloc] init];
+    }
+    
+    if (_AST == nil) {
+        _AST = [[AssignmentTable alloc] init];
+    }
+    
 }
 
 - (cv::Mat)cvMatFromUIImage:(UIImage *)image
@@ -330,6 +363,11 @@ using namespace std;
     [self checkInHullPosX:lastPoint.x Y:lastPoint.y];
 //    path = [UIBezierPath bezierPath];
 //    [path moveToPoint:lastPoint];
+    
+    // Virtual Instrument Test
+    NSLog(@"Virtual Instrument Testing");
+    MIDINote *Note = [[MIDINote alloc] initWithNote:80 duration:1 channel:Piano velocity:100 SysEx:0 Root:0x90];
+    [_VI playMIDI:Note];
 }
 
 - (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -355,9 +393,10 @@ using namespace std;
     
 }
 
-- (void) clearImage {
+- (void) refreshImage {
     path = [UIBezierPath bezierPath];
     self.mainImage.image = nil;
+    //[self startMediaBrowserFromViewController:self usingDelegate:self];
 }
 
 - (void)didReceiveMemoryWarning
