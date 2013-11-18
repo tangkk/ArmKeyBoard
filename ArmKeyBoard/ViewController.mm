@@ -22,6 +22,7 @@
 #import "AssignmentTable.h"
 
 //#define CANNY
+//#define HULL
 
 using namespace std;
 
@@ -70,7 +71,7 @@ using namespace std;
     // Initialize opencv variables
     thresh = 100;
     max_thresh = 255;
-    contourmin = 50;
+    contourmin = 100;
     max_contourmin = 2000;
     
     widthRatio = 1;
@@ -173,7 +174,7 @@ using namespace std;
     
     //make sure there's exactly 20 contours extracted from the source
     thresh = 100;
-    do {
+//    do {
         /*************************Find and draw each contour********************************/
         contours.clear();
         
@@ -188,28 +189,30 @@ using namespace std;
 #endif
         
         //discard the small contours until there are 20 left
-        contourmin = 50;
-        do {
+        int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2
+//        do {
             mycontours.clear();
             for( int i = 0; i< contours.size(); i++) {
                 double area = contourArea(contours[i]);
-                if (area > contourmin)
+                if (area > contourminScaled)
                     mycontours.push_back(contours[i]);
             }
-            contourmin++;
-        } while (mycontours.size() > 20 && contourmin < max_contourmin);
-        if (mycontours.size() > 20) {
-            thresh-=10;
-        } else {
-            thresh+=10;
-        }
-        cout << "mycontours.size() = " << mycontours.size() << "\n";
-        cout << "thresh = " << thresh << "\n";
-        cout << "contourmin = " << contourmin << "\n";
-    } while ((mycontours.size() < 20 && thresh > 5) || (mycontours.size() > 20 && thresh < max_thresh));
-    cout << "final mycontours.size() = " << mycontours.size() << "\n";
-    cout << "final thresh = " << thresh << "\n";
-    cout << "final contourmin = " << contourmin << "\n";
+//            contourmin++;
+//        } while (mycontours.size() > 20 && contourmin < max_contourmin);
+//        
+//        if (mycontours.size() > 20) {
+//            thresh-=10;
+//        } else {
+//            thresh+=10;
+//        }
+//        cout << "mycontours.size() = " << mycontours.size() << "\n";
+//        cout << "thresh = " << thresh << "\n";
+//        cout << "contourmin = " << contourmin << "\n";
+//    } while ((mycontours.size() < 20 && thresh > 5) || (mycontours.size() > 20 && thresh < max_thresh));
+//    
+//    cout << "final mycontours.size() = " << mycontours.size() << "\n";
+//    cout << "final thresh = " << thresh << "\n";
+//    cout << "final contourmin = " << contourmin << "\n";
     
     cv::RNG rng(12345);
     for( int i = 0; i< mycontours.size(); i++ ) {
@@ -238,17 +241,32 @@ using namespace std;
 #else
     drawing = cv::Mat::zeros( threshold_output.size(), CV_8UC4 );
 #endif
-    for( size_t i = 0; i< mycontours.size(); i++ )
+    
+#ifdef HULL
+    for( size_t i = 0; i< myhulls.size(); i++ )
     {
         cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
         cv::drawContours( drawing, myhulls, (int)i, color, 2, 8, vector<cv::Vec4i>(), 0, cv::Point() );
     }
     
-    for( size_t i = 0; i< mycontours.size(); i++ )
+    for( size_t i = 0; i< myhulls.size(); i++ )
     {
         cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255)  );
         cv::drawContours( drawing, myhulls, (int)i, color, 2, 8, vector<cv::Vec4i>(), 0, cv::Point() );
     }
+#else
+    for( size_t i = 0; i< mycontours.size(); i++ )
+    {
+        cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+        cv::drawContours( drawing, mycontours, (int)i, color, 2, 8, vector<cv::Vec4i>(), 0, cv::Point() );
+    }
+    
+    for( size_t i = 0; i< mycontours.size(); i++ )
+    {
+        cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255)  );
+        cv::drawContours( drawing, mycontours, (int)i, color, 2, 8, vector<cv::Vec4i>(), 0, cv::Point() );
+    }
+#endif
     
     
     /*************************Mix the source and the drawings********************************/
@@ -333,12 +351,20 @@ using namespace std;
 //    return CGPointMake((p0.x + p1.x)/2, (p0.y + p1.y)/2);
 //}
 
+// FIXME: Apply an intelligent algorithm to map the regions to notes
+static int context2noteNum (int x, int y, float dist, int hullNum) {
+    return 80;
+}
+
 - (void) checkInHullPosX:(int)x Y:(int)y {
     bool isInHull = false;
     float dist;
+    int hullNum;
     int scaleX, scaleY;
     scaleX = x*widthRatio;
     scaleY = y*heightRatio;
+    
+    int noteNum = 80;
     
     //FIXME: Please fix it through scaling by the ratio between image size and screen size
     for (int i = 0; i < myhulls.size(); i++) {
@@ -349,25 +375,29 @@ using namespace std;
             dist /= distRatio; //Scale down the dist
             cout << "The current pos is in Hull " << i << " with distance " << dist << "\n";
             isInHull = true;
+            hullNum = i;
         }
     }
     if (!isInHull) {
         cout << "The current pos is outside " << "\n";
+        hullNum = 0;
     }
     cout << "current pos x = " << x << " y = " << y << "\n";
+    
+    noteNum = context2noteNum(x, y, dist, hullNum);
+
+    NSLog(@"Virtual Instrument Testing");
+    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:100 SysEx:0 Root:0x90];
+    [_VI playMIDI:Note];
 }
 
 - (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
     lastPoint = [touch locationInView:self.view];
     [self checkInHullPosX:lastPoint.x Y:lastPoint.y];
+    
 //    path = [UIBezierPath bezierPath];
 //    [path moveToPoint:lastPoint];
-    
-    // Virtual Instrument Test
-    NSLog(@"Virtual Instrument Testing");
-    MIDINote *Note = [[MIDINote alloc] initWithNote:80 duration:1 channel:Piano velocity:100 SysEx:0 Root:0x90];
-    [_VI playMIDI:Note];
 }
 
 - (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
