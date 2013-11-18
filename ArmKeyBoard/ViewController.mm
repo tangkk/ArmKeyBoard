@@ -23,6 +23,7 @@
 
 //#define CANNY
 //#define HULL
+//#define TEST
 
 using namespace std;
 
