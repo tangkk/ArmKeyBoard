@@ -161,7 +161,6 @@ using namespace std;
     return finalImage;
 }
 
-// FIXME: The smallest size of the hull should be consistent on the screen no matter how large of how small the image is
 -(void) doContourOperationTarget: (cv::Mat &)targtImg  Src:(cv::Mat &)srcImg Mix:(cv::Mat &)mixImg{
     cv::Mat threshold_output;
     cv::Mat canny_output;
@@ -175,52 +174,33 @@ using namespace std;
     
     //make sure there's exactly 20 contours extracted from the source
     thresh = 100;
-//    do {
-        /*************************Find and draw each contour********************************/
-        contours.clear();
+    
+    /*************************Find and draw each contour********************************/
+    contours.clear();
         
 #ifdef CANNY
-        cv::Canny( targtImg, canny_output, thresh, thresh*2, 3 );
-        findContours( canny_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
-        contourdrawing = cv::Mat::zeros( canny_output.size(), CV_8UC4 );
+    cv::Canny( targtImg, canny_output, thresh, thresh*2, 3 );
+    findContours( canny_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+    contourdrawing = cv::Mat::zeros( canny_output.size(), CV_8UC4 );
 #else
-        cv::threshold( targtImg, threshold_output, thresh, 255, cv::THRESH_BINARY );
-        findContours( threshold_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
-        contourdrawing = cv::Mat::zeros( threshold_output.size(), CV_8UC4 );
+    cv::threshold( targtImg, threshold_output, thresh, 255, cv::THRESH_BINARY );
+    findContours( threshold_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
+    contourdrawing = cv::Mat::zeros( threshold_output.size(), CV_8UC4 );
 #endif
-        
-        //discard the small contours until there are 20 left
-        int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2
-//        do {
-            mycontours.clear();
-            for( int i = 0; i< contours.size(); i++) {
-                double area = contourArea(contours[i]);
-                if (area > contourminScaled)
-                    mycontours.push_back(contours[i]);
-            }
-//            contourmin++;
-//        } while (mycontours.size() > 20 && contourmin < max_contourmin);
-//        
-//        if (mycontours.size() > 20) {
-//            thresh-=10;
-//        } else {
-//            thresh+=10;
-//        }
-//        cout << "mycontours.size() = " << mycontours.size() << "\n";
-//        cout << "thresh = " << thresh << "\n";
-//        cout << "contourmin = " << contourmin << "\n";
-//    } while ((mycontours.size() < 20 && thresh > 5) || (mycontours.size() > 20 && thresh < max_thresh));
-//    
-//    cout << "final mycontours.size() = " << mycontours.size() << "\n";
-//    cout << "final thresh = " << thresh << "\n";
-//    cout << "final contourmin = " << contourmin << "\n";
+    
+    int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2, so that this area is correspond to the real image
+    mycontours.clear();
+    for( int i = 0; i< contours.size(); i++) {
+        double area = contourArea(contours[i]);
+        if (area > contourminScaled)
+            mycontours.push_back(contours[i]);
+    }
     
     cv::RNG rng(12345);
     for( int i = 0; i< mycontours.size(); i++ ) {
         cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
         cv::drawContours( contourdrawing, mycontours, i, color, 1, 8, hierarchy, 0, cv::Point() );
     }
-    
     
     for( int i = 0; i< mycontours.size(); i++ ) {
         cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
@@ -347,77 +327,56 @@ using namespace std;
     return [self UIImageFromCVMat:mix];
 }
 
-// Drawing methods
-//static CGPoint midPoint(CGPoint p0, CGPoint p1) {
-//    return CGPointMake((p0.x + p1.x)/2, (p0.y + p1.y)/2);
-//}
-
 // FIXME: Apply an intelligent algorithm to map the regions to notes
+// The algorithm:
 static int context2noteNum (int x, int y, float dist, int hullNum) {
     return 80;
 }
 
-- (void) checkInHullPosX:(int)x Y:(int)y {
-    bool isInHull = false;
+- (void) checkInsidePosX:(int)x Y:(int)y {
+    bool isInside = false;
     float dist;
     int hullNum;
+    
+    // The pass in x and y are the x,y value  to the screen space, we transform it to the image space
     int scaleX, scaleY;
     scaleX = x*widthRatio;
     scaleY = y*heightRatio;
     
+    // The default MIDI number
     int noteNum = 80;
     
-    //FIXME: Please fix it through scaling by the ratio between image size and screen size
+    //  Calculate the distance and scale it down the dist to the screen space
     for (int i = 0; i < myhulls.size(); i++) {
         dist = (float)cv::pointPolygonTest( myhulls[i], cv::Point2f(scaleX,scaleY), true );
-        
-        // FIXME: what about the distance, should it also be scaled down?
         if(dist > 0) {
-            dist /= distRatio; //Scale down the dist
+            dist /= distRatio;
             cout << "The current pos is in Hull " << i << " with distance " << dist << "\n";
-            isInHull = true;
+            isInside = true;
             hullNum = i;
         }
     }
-    if (!isInHull) {
-        cout << "The current pos is outside " << "\n";
+    if (!isInside) {
+        cout << "The current pos is outside the contour" << "\n";
         hullNum = 0;
     }
-    cout << "current pos x = " << x << " y = " << y << "\n";
+    cout << "current pos x = " << x << " y = " << y  << "\n";
     
+    // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space
     noteNum = context2noteNum(x, y, dist, hullNum);
-
     NSLog(@"Virtual Instrument Testing");
-    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:100 SysEx:0 Root:0x90];
+    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:100 SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
 
 - (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
     lastPoint = [touch locationInView:self.view];
-    [self checkInHullPosX:lastPoint.x Y:lastPoint.y];
-    
-//    path = [UIBezierPath bezierPath];
-//    [path moveToPoint:lastPoint];
+    [self checkInsidePosX:lastPoint.x Y:lastPoint.y];
 }
 
 - (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-//    UITouch *touch = [touches anyObject];
-//    CGPoint currentPoint = [touch locationInView:self.view];
-//
-//    CGPoint middlePoint = midPoint(lastPoint, currentPoint);
-//    [path addQuadCurveToPoint:middlePoint controlPoint:lastPoint];
-//    
-//    UIGraphicsBeginImageContext(self.view.frame.size);
-//    [self.mainImage.image drawInRect:CGRectMake(0, 0, self.mainImage.frame.size.width, self.mainImage.frame.size.height)];
-//    [[UIColor blackColor] setStroke];
-//    [path setLineWidth:brush];
-//    [path stroke];
-//    CGContextAddPath(UIGraphicsGetCurrentContext(), path.CGPath);
-//    self.mainImage.image = UIGraphicsGetImageFromCurrentImageContext();
-//    UIGraphicsEndImageContext();
-//    
-//    lastPoint = currentPoint;
+
 }
 
 - (void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {

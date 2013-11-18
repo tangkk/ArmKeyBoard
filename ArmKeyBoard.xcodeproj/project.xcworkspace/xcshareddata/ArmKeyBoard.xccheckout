@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>9EFFC039-07BD-4B7E-B1C5-318A39E048EF</string>
+	<key>IDESourceControlProjectName</key>
+	<string>ArmKeyBoard</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>190F4F29-7BC4-49EA-A7DD-B1341ADF535A</key>
+		<string>https://github.com/tangkk/ArmKeyBoard.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>ArmKeyBoard.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>190F4F29-7BC4-49EA-A7DD-B1341ADF535A</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/tangkk/ArmKeyBoard.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>190F4F29-7BC4-49EA-A7DD-B1341ADF535A</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>190F4F29-7BC4-49EA-A7DD-B1341ADF535A</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ArmKeyBoard</string>
+		</dict>
+	</array>
+</dict>
+</plist>
