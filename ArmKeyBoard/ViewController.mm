@@ -43,6 +43,7 @@ using namespace std;
     // The contours and hulls
     vector<vector<cv::Point> > mycontours;
     vector<vector<cv::Point> > myhulls;
+    cv::Mat srcMat;
     
     // Image : Screen Ratio
     float widthRatio;
@@ -317,13 +318,13 @@ using namespace std;
 }
 
 - (UIImage *) ConvexHullProcessSrcImage:(UIImage *) SrcImg {
-    cv::Mat src = [self cvMatFromUIImage:SrcImg];
+    srcMat = [self cvMatFromUIImage:SrcImg];
     cv::Mat src_gray;
     cv::Mat mix;
     
-    cv::cvtColor( src, src_gray, cv::COLOR_BGR2GRAY );
+    cv::cvtColor( srcMat, src_gray, cv::COLOR_BGR2GRAY );
     cv::blur( src_gray, src_gray, cv::Size(3,3) );
-    [self doContourOperationTarget:src_gray Src:src Mix:mix];
+    [self doContourOperationTarget:src_gray Src:srcMat Mix:mix];
     return [self UIImageFromCVMat:mix];
 }
 
@@ -346,6 +347,15 @@ static int context2noteNum (int x, int y, float dist, int hullNum) {
     // The default MIDI number
     int noteNum = 80;
     
+    // RGB value
+    int Red, Green, Blue;
+    if (srcMat.rows > 0) {
+        Red = srcMat.at<cv::Vec3b>(scaleX, scaleY)[2];
+        Green = srcMat.at<cv::Vec3b>(scaleX, scaleY)[1];
+        Blue = srcMat.at<cv::Vec3b>(scaleX, scaleY)[0];
+        cout << "RGB = " << Red << "," << Green << "," << Blue << "\n";
+    }
+    
     //  Calculate the distance and scale it down the dist to the screen space
     for (int i = 0; i < myhulls.size(); i++) {
         dist = (float)cv::pointPolygonTest( myhulls[i], cv::Point2f(scaleX,scaleY), true );
@@ -364,7 +374,7 @@ static int context2noteNum (int x, int y, float dist, int hullNum) {
     
     // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space
     noteNum = context2noteNum(x, y, dist, hullNum);
-    NSLog(@"Virtual Instrument Testing");
+    
     MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:100 SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
