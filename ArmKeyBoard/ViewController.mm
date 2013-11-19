@@ -350,9 +350,9 @@ static int context2noteNum (int x, int y, float dist, int hullNum) {
     // RGB value
     int Red, Green, Blue;
     if (srcMat.rows > 0) {
-        Red = srcMat.at<cv::Vec3b>(scaleX, scaleY)[2];
-        Green = srcMat.at<cv::Vec3b>(scaleX, scaleY)[1];
-        Blue = srcMat.at<cv::Vec3b>(scaleX, scaleY)[0];
+        Red = srcMat.at<cv::Vec4b>(scaleX, scaleY)[0];
+        Green = srcMat.at<cv::Vec4b>(scaleX, scaleY)[1];
+        Blue = srcMat.at<cv::Vec4b>(scaleX, scaleY)[2];
         cout << "RGB = " << Red << "," << Green << "," << Blue << "\n";
     }
     
