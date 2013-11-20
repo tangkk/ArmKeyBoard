@@ -43,6 +43,7 @@ using namespace std;
     // The contours and hulls
     vector<vector<cv::Point> > mycontours;
     vector<vector<cv::Point> > myhulls;
+    map<int, vector<int> > region2scale;
     cv::Mat srcMat;
     
     // Image : Screen Ratio
@@ -311,7 +312,8 @@ using namespace std;
         // Do Image processing using opencv here;
         _mainImage.image = [self ConvexHullProcessSrcImage:selectedImage];
         
-        //_mainImage.image = selectedImage;
+        // Perform the algorithm on to the contours to produce the region-scale mapping
+        regions2scale(mycontours, region2scale);
     }
     
     [picker dismissViewControllerAnimated:YES completion:nil];
@@ -328,9 +330,40 @@ using namespace std;
     return [self UIImageFromCVMat:mix];
 }
 
-// FIXME: Apply an intelligent algorithm to map the regions to notes
-// The algorithm:
-static int context2noteNum (int x, int y, float dist, int hullNum) {
+// FIXME: Apply an intelligent algorithm to 1. map the regions to notes; 2. fine elaborate the very note details according to the very tapping context
+/* Note that this is not a "problem statement" in mathematical sense
+ Problem statement 1: Given a set of regions of pixels that together form a large rectangular image,
+ find out an optimal scheme to map a certain musical scale(in the form of pitch class) into these pixel regions so that
+ within this scale a non-musical player can improvise along a corresponding chord moment musically.
+ (Notes in different range can be swapped via certain mechanisms)
+ Problem statement 2: Given a region containing several notes, and a tapping position,
+ together with the pixel's RGB value, determine which note to be selected and the velocity of this note,
+ such that a non-musical player can improvise along a corresponding chord moment musically.
+*/
+/* Key observation:
+ 1. Every scale has a tonic note, which the underlining chord moment put stress on
+ 2. Every other notes has some kind of "degree" related to the tonic note, and "functionality" and "importance"  to each other
+ 3. Assume every chord moment is of equal importance, such that playing each scale is indepent of the last scale
+ 4. The regions together actually forms a graph, and the notes in the scale can also form a graph
+ 5. The scale can be Octatonic, Heptatonic, Hexatonic, Pentatonic... etc.
+ 6. It's a non-linear note arrangment compared with the tranditional instrument's linear note arrangement
+ 7. The scale is chord-scale, and the important notes within it are the chord notes, and the important sequence is arpeggio
+ 8. velocity can be associated with RGB or distance to the contour
+ 9. The root of a spanning tree of a graph can be associated with the most connected region in the image
+ 10. The root of a spanning tree of a graph can also be associated with the largest region in the image
+ */
+/* The algorithm:
+ */
+/* Evaluation:
+ use WIJAM as a platform, auto master config, play a couple of songs with this keyboard and with the old one,
+ record them and let real people to evaluate the musicality of the songs
+ */
+
+static void regions2scale (vector<vector<cv::Point> > &regions, map<int, vector<int> > &regionscale) {
+    
+}
+
+static int context2noteNum (int x, int y, float dist, int hullNum, int R, int G, int B) {
     return 80;
 }
 
@@ -348,7 +381,7 @@ static int context2noteNum (int x, int y, float dist, int hullNum) {
     int noteNum = 80;
     
     // RGB value
-    int Red, Green, Blue;
+    int Red = 0, Green = 0, Blue = 0;
     if (srcMat.rows > 0) {
         Red = srcMat.at<cv::Vec4b>(scaleX, scaleY)[0];
         Green = srcMat.at<cv::Vec4b>(scaleX, scaleY)[1];
@@ -372,8 +405,8 @@ static int context2noteNum (int x, int y, float dist, int hullNum) {
     }
     cout << "current pos x = " << x << " y = " << y  << "\n";
     
-    // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space
-    noteNum = context2noteNum(x, y, dist, hullNum);
+    // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space, and generate a note
+    noteNum = context2noteNum(x, y, dist, hullNum, Red, Green, Blue);
     
     MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:100 SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
