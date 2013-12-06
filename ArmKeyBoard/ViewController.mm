@@ -53,6 +53,7 @@ using namespace std;
 }
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
+@property (strong, nonatomic) IBOutlet UIButton *chooseImage;
 
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
@@ -283,6 +284,7 @@ using namespace std;
 
 - (IBAction)showImageBrowser:(id)sender {
     NSLog(@"Action Called");
+    [_chooseImage setHidden:YES];
     [self startMediaBrowserFromViewController:self usingDelegate:self];
 }
 
@@ -429,6 +431,7 @@ static int context2noteNum (int x, int y, float dist, int hullNum, int R, int G,
 - (void) refreshImage {
     path = [UIBezierPath bezierPath];
     self.mainImage.image = nil;
+    [_chooseImage setHidden:NO];
     //[self startMediaBrowserFromViewController:self usingDelegate:self];
 }
 

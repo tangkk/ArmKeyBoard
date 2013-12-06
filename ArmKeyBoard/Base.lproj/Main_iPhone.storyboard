@@ -35,6 +35,7 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
                     <connections>
+                        <outlet property="chooseImage" destination="gdB-3H-Ghh" id="BOj-Hc-WzE"/>
                         <outlet property="mainImage" destination="ATO-W0-Cj6" id="hrf-jv-5th"/>
                     </connections>
                 </viewController>
