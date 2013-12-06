@@ -43,6 +43,9 @@ using namespace std;
     // The contours and hulls
     vector<vector<cv::Point> > mycontours;
     vector<vector<cv::Point> > myhulls;
+    vector<int> contourmark; // This is to mark the original contour number to the mycontour number
+    // tangkk - So Vec4i indicates 4 entries in each elements of the vector. This is the contour hierarhcy (a tree structure)
+    vector<cv::Vec4i> hierarchy;
     map<int, vector<int> > region2scale;
     cv::Mat srcMat;
     
@@ -164,22 +167,74 @@ using namespace std;
     return finalImage;
 }
 
+// When delete a node, use the node's parent as the parent of its children, and it's children the children of its parent, modify the siblings.
+//                  [0      , 1            , 2               , 3         ]
+// structure: [Next, Previous, First_Child, Parent]
+static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
+    cout << hier[nodeNum] << "\n";
+    int next = hier[nodeNum][0];
+    int prev = hier[nodeNum][1];
+    int firstChild = hier[nodeNum][2];
+    int parent = hier[nodeNum][3];
+    
+    // set parents
+    int currentChild = firstChild;
+    int lastChild = firstChild;
+    while (currentChild != -1) {
+        hier[currentChild][3] = parent;
+        lastChild = currentChild;
+        currentChild = hier[currentChild][0]; // move to next
+    }
+    
+    if (firstChild != -1) {
+        if (prev == -1 && parent != -1) {
+            // it's the first siblings
+            hier[parent][2] = firstChild;
+        }
+        if (prev != -1) {
+            // it's not the first siblings
+            hier[prev][0] = firstChild;
+            hier[firstChild][1] = prev;
+        }
+        if (next != -1) {
+            // it's not the last siblings
+            hier[lastChild][0] = next;
+            hier[next][1] = lastChild;
+        }
+    } else {
+        if (prev == -1 && parent != -1) {
+            // it's the first siblings
+            hier[parent][2] = next;
+        }
+        if (prev != -1) {
+            // it's not the first siblings
+            hier[prev][0] = next;
+        }
+        if (next != -1) {
+            // it's not the last siblings
+            hier[next][1] = prev;
+        }
+    }
+    
+    hier[nodeNum][0] = -2;
+    hier[nodeNum][1] = -2;
+    hier[nodeNum][2] = -2;
+    hier[nodeNum][3] = -2;
+}
+
 -(void) doContourOperationTarget: (cv::Mat &)targtImg  Src:(cv::Mat &)srcImg Mix:(cv::Mat &)mixImg{
     cv::Mat threshold_output;
     cv::Mat canny_output;
     cv::Mat contourdrawing;
     // tangkk - Contours are a vector of vector of points
     vector<vector<cv::Point> > contours;
-    
-    // tangkk - So Vec4i may indicates 4 entries in each elements of the vector?
-    vector<cv::Vec4i> hierarchy;
-    
-    
+
     //make sure there's exactly 20 contours extracted from the source
     thresh = 100;
     
-    /*************************Find and draw each contour********************************/
+#pragma mark - Find and draw each contour
     contours.clear();
+    hierarchy.clear();
         
 #ifdef CANNY
     cv::Canny( targtImg, canny_output, thresh, thresh*2, 3 );
@@ -190,14 +245,32 @@ using namespace std;
     findContours( threshold_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
     contourdrawing = cv::Mat::zeros( threshold_output.size(), CV_8UC4 );
 #endif
+
+#pragma mark - delete some small contours and the corresponding hierarchy nodes.
+    /******Print out the hierarchy******/
+    cout << "******Hierarchy******\n";
+    for (vector<cv::Vec4i>::iterator ih = hierarchy.begin(), eh = hierarchy.end(); ih != eh ; ++ih ) {
+        cout << *ih << "\n";
+    }
     
     int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2, so that this area is correspond to the real image
     mycontours.clear();
+    cout << "******Nodes to be deleted" << "\n";
     for( int i = 0; i< contours.size(); i++) {
         double area = contourArea(contours[i]);
-        if (area > contourminScaled)
+        if (area > contourminScaled) {
             mycontours.push_back(contours[i]);
+            contourmark.push_back(i);
+        }
+        else
+            deleteHierachyNode(hierarchy, i);
     }
+    /******Print out the new hierarchy******/
+    cout << "******New Hierarchy******\n";
+    for (vector<cv::Vec4i>::iterator ih = hierarchy.begin(), eh = hierarchy.end(); ih != eh ; ++ih ) {
+        cout << *ih << "\n";
+    }
+
     
     cv::RNG rng(12345);
     for( int i = 0; i< mycontours.size(); i++ ) {
@@ -392,11 +465,11 @@ static int context2noteNum (int x, int y, float dist, int hullNum, int R, int G,
     }
     
     //  Calculate the distance and scale it down the dist to the screen space
-    for (int i = 0; i < myhulls.size(); i++) {
-        dist = (float)cv::pointPolygonTest( myhulls[i], cv::Point2f(scaleX,scaleY), true );
+    for (int i = 0; i < mycontours.size(); i++) {
+        dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
         if(dist > 0) {
             dist /= distRatio;
-            cout << "The current pos is in Hull " << i << " with distance " << dist << "\n";
+            cout << "The current pos is in contour " << contourmark[i] << " with distance " << dist << "\n";
             isInside = true;
             hullNum = i;
         }
