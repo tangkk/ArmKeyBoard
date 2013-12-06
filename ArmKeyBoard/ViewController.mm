@@ -222,6 +222,52 @@ static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
     hier[nodeNum][3] = -2;
 }
 
+// Once we got the hierarchy, we need to calculate the score of each note based on 1. degree; 2. area; 3. central location
+// Calculate and then sort
+- (void) sortContours: (vector<vector<cv::Point> > &)conts {
+    // create a 2d vector - [contour index, degree score, area score, location score]
+    vector<vector<int> > score;
+    CGPoint center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
+    
+    cout << "sortContours...\n";
+    for (int i = 0; i < conts.size(); i++) {
+        vector<cv::Point> cont = conts[i];
+        int nodeNum = contourmark[i];
+        cout << "******contour number****** ----> " << nodeNum << "\n";
+        
+        // Calculate the degree score = # of parent node + child nodes
+        int degreescore = 0;
+        if (hierarchy[nodeNum][3] != -1) {
+            degreescore ++;
+        }
+        int currentChild = hierarchy[nodeNum][2];
+        while (currentChild != -1) {
+            degreescore ++;
+            currentChild = hierarchy[currentChild][0];
+        }
+        // 500 is a weight for the degree score
+        // It's subjected to be fixed since the absolute number of degree is much smaller than the area
+        degreescore *= 500;
+        cout << "degreescore = " << degreescore << "\n";
+        
+        // Calculate the area of the contour
+        double areascore = contourArea(cont) / (distRatio * distRatio);
+        cout << "areascore = " << areascore << "\n";
+        
+        // Calculate the mass center of the contour
+        double locationscore;
+        cv::Moments mu = moments(cont, false);
+        CGPoint mc = CGPointMake((mu.m10 / mu.m00) / widthRatio, (mu.m01 / mu.m00) / heightRatio);
+        float dist = sqrt((mc.x - center.x)*(mc.x - center.x) + (mc.y - center.y)*(mc.y - center.y));
+        locationscore = dist;
+        
+        cout << "center point --> " << center.x << "," << center.y << "\n";
+        cout << "mc point --> " << mc.x << "," << mc.y << "\n";
+        cout << "locationscore = " << locationscore << "\n";
+        
+    }
+}
+
 -(void) doContourOperationTarget: (cv::Mat &)targtImg  Src:(cv::Mat &)srcImg Mix:(cv::Mat &)mixImg{
     cv::Mat threshold_output;
     cv::Mat canny_output;
@@ -270,8 +316,11 @@ static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
     for (vector<cv::Vec4i>::iterator ih = hierarchy.begin(), eh = hierarchy.end(); ih != eh ; ++ih ) {
         cout << *ih << "\n";
     }
-
     
+#pragma mark - sort contours
+    [self sortContours:mycontours];
+    
+#pragma mark - draw contours
     cv::RNG rng(12345);
     for( int i = 0; i< mycontours.size(); i++ ) {
         cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
