@@ -222,17 +222,23 @@ static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
     hier[nodeNum][3] = -2;
 }
 
+// Compare the second element of the input vectors. It's to be used by the sort function.
+static bool vectorCompare (vector<int>A, vector<int> B) {
+    //cout << "A[1] = " << A[1] << "," << "B[1] = " << B[1] << "\n";
+    return A[1] > B[1];
+}
+
 // Once we got the hierarchy, we need to calculate the score of each note based on 1. degree; 2. area; 3. central location
-// Calculate and then sort
-- (void) sortContours: (vector<vector<cv::Point> > &)conts {
-    // create a 2d vector - [contour index, degree score, area score, location score]
+// Calculate and then sort. The sorted order is descending.
+- (void) sortContours: (vector<vector<cv::Point> > &)conts withMarks: (vector<int> &) marks{
+    // create a 2d vector - [contour index, overall score]
     vector<vector<int> > score;
     CGPoint center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
     
     cout << "sortContours...\n";
     for (int i = 0; i < conts.size(); i++) {
         vector<cv::Point> cont = conts[i];
-        int nodeNum = contourmark[i];
+        int nodeNum = marks[i];
         cout << "******contour number****** ----> " << nodeNum << "\n";
         
         // Calculate the degree score = # of parent node + child nodes
@@ -248,11 +254,9 @@ static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
         // 500 is a weight for the degree score
         // It's subjected to be fixed since the absolute number of degree is much smaller than the area
         degreescore *= 500;
-        cout << "degreescore = " << degreescore << "\n";
         
         // Calculate the area of the contour
         double areascore = contourArea(cont) / (distRatio * distRatio);
-        cout << "areascore = " << areascore << "\n";
         
         // Calculate the mass center of the contour
         double locationscore;
@@ -263,9 +267,41 @@ static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
         
         cout << "center point --> " << center.x << "," << center.y << "\n";
         cout << "mc point --> " << mc.x << "," << mc.y << "\n";
+        cout << "degreescore = " << degreescore << "\n";
+        cout << "areascore = " << areascore << "\n";
         cout << "locationscore = " << locationscore << "\n";
         
+        int overallscore = degreescore + areascore + locationscore;
+        // indScore -- [contour index, overallscore]
+        vector<int> indscore;
+        indscore.push_back(i);
+        indscore.push_back(overallscore);
+        score.push_back(indscore);
     }
+    
+    cout << "******original score vectors****** \n";
+    for (vector<vector<int> >::iterator i = score.begin(), e = score.end(); i != e; ++i) {
+        cout << (*i)[0] << "," << (*i)[1] << "\n";
+    }
+    
+    sort(score.begin(), score.end(), vectorCompare);
+    
+    cout << "******sorted score vectors****** \n";
+    for (vector<vector<int> >::iterator i = score.begin(), e = score.end(); i != e; ++i) {
+        cout << (*i)[0] << "," << (*i)[1] << "\n";
+    }
+    
+    // rearrange the mycontours and contourmark according to the sorted list
+    // copy, clear and put back
+    vector<vector<cv::Point> > mycontourcopy = conts;
+    vector<int> contourmarkcopy = marks;
+    conts.clear();
+    marks.clear();
+    for (vector<vector<int> >::iterator i = score.begin(), e = score.end(); i != e; ++i) {
+        conts.push_back(mycontourcopy[(*i)[0]]);
+        marks.push_back(contourmarkcopy[(*i)[0]]);
+    }
+    
 }
 
 -(void) doContourOperationTarget: (cv::Mat &)targtImg  Src:(cv::Mat &)srcImg Mix:(cv::Mat &)mixImg{
@@ -318,7 +354,17 @@ static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
     }
     
 #pragma mark - sort contours
-    [self sortContours:mycontours];
+    cout << "******original contourmark****** \n";
+    for (vector<int>::iterator i = contourmark.begin(), e = contourmark.end(); i != e; ++i) {
+        cout << (*i) << "\n";
+    }
+
+    [self sortContours:mycontours withMarks:contourmark];
+    
+    cout << "******sorted contourmark****** \n";
+    for (vector<int>::iterator i = contourmark.begin(), e = contourmark.end(); i != e; ++i) {
+        cout << (*i) << "\n";
+    }
     
 #pragma mark - draw contours
     cv::RNG rng(12345);
