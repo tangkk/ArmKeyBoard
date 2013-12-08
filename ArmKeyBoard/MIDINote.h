@@ -1,6 +1,6 @@
 //
 //  MIDINote.h
-//  MasterMachine
+//  ArmKeyBoard
 //
 //  Created by tangkk on 12/3/13.
 //  Copyright (c) 2013 tangkk. All rights reserved.

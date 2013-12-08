@@ -1,6 +1,6 @@
 //
-//  AUGraphConsole.m
-//  MasterMachine
+//  VirtualInstrument.m
+//  ArmKeyBoard
 //
 //  Created by tangkk on 18/3/13.
 //  Copyright (c) 2013 tangkk. All rights reserved.

@@ -9,8 +9,7 @@
 /* Begin PBXBuildFile section */
 		90462AF7182C98A200C077E4 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90462AF6182C98A200C077E4 /* opencv2.framework */; };
 		90462AFB182CB5B900C077E4 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */; };
-		9078F3501839B1DA00EA23F5 /* AssignmentTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F3491839B1DA00EA23F5 /* AssignmentTable.m */; };
-		9078F3511839B1DA00EA23F5 /* AssignmentTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F3491839B1DA00EA23F5 /* AssignmentTable.m */; };
+		9078C6EE18543B3B00E39CB4 /* HierarchicalScale.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078C6ED18543B3B00E39CB4 /* HierarchicalScale.m */; };
 		9078F3521839B1DA00EA23F5 /* MIDINote.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34B1839B1DA00EA23F5 /* MIDINote.m */; };
 		9078F3531839B1DA00EA23F5 /* MIDINote.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34B1839B1DA00EA23F5 /* MIDINote.m */; };
 		9078F3541839B1DA00EA23F5 /* NoteNumDict.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34D1839B1DA00EA23F5 /* NoteNumDict.m */; };
@@ -53,8 +52,8 @@
 /* Begin PBXFileReference section */
 		90462AF6182C98A200C077E4 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = ArmKeyBoard/opencv2.framework; sourceTree = "<group>"; };
 		90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
-		9078F3481839B1DA00EA23F5 /* AssignmentTable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AssignmentTable.h; sourceTree = "<group>"; };
-		9078F3491839B1DA00EA23F5 /* AssignmentTable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AssignmentTable.m; sourceTree = "<group>"; };
+		9078C6EC18543B3B00E39CB4 /* HierarchicalScale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HierarchicalScale.h; sourceTree = "<group>"; };
+		9078C6ED18543B3B00E39CB4 /* HierarchicalScale.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HierarchicalScale.m; sourceTree = "<group>"; };
 		9078F34A1839B1DA00EA23F5 /* MIDINote.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDINote.h; sourceTree = "<group>"; };
 		9078F34B1839B1DA00EA23F5 /* MIDINote.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDINote.m; sourceTree = "<group>"; };
 		9078F34C1839B1DA00EA23F5 /* NoteNumDict.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NoteNumDict.h; sourceTree = "<group>"; };
@@ -160,12 +159,12 @@
 				90DFA50F181B56BC00145DB9 /* Main_iPad.storyboard */,
 				90DFA512181B56BC00145DB9 /* ViewController.h */,
 				90DFA513181B56BC00145DB9 /* ViewController.mm */,
-				9078F3481839B1DA00EA23F5 /* AssignmentTable.h */,
-				9078F3491839B1DA00EA23F5 /* AssignmentTable.m */,
 				9078F34A1839B1DA00EA23F5 /* MIDINote.h */,
 				9078F34B1839B1DA00EA23F5 /* MIDINote.m */,
 				9078F34C1839B1DA00EA23F5 /* NoteNumDict.h */,
 				9078F34D1839B1DA00EA23F5 /* NoteNumDict.m */,
+				9078C6EC18543B3B00E39CB4 /* HierarchicalScale.h */,
+				9078C6ED18543B3B00E39CB4 /* HierarchicalScale.m */,
 				9078F34E1839B1DA00EA23F5 /* VirtualInstrument.h */,
 				9078F34F1839B1DA00EA23F5 /* VirtualInstrument.m */,
 				90DFA515181B56BC00145DB9 /* Images.xcassets */,
@@ -308,8 +307,8 @@
 				9078F3521839B1DA00EA23F5 /* MIDINote.m in Sources */,
 				90DFA514181B56BC00145DB9 /* ViewController.mm in Sources */,
 				9078F3561839B1DA00EA23F5 /* VirtualInstrument.m in Sources */,
-				9078F3501839B1DA00EA23F5 /* AssignmentTable.m in Sources */,
 				90DFA50B181B56BC00145DB9 /* AppDelegate.m in Sources */,
+				9078C6EE18543B3B00E39CB4 /* HierarchicalScale.m in Sources */,
 				9078F3541839B1DA00EA23F5 /* NoteNumDict.m in Sources */,
 				90DFA507181B56BC00145DB9 /* main.m in Sources */,
 			);
@@ -320,7 +319,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				90DFA529181B56BC00145DB9 /* ArmKeyBoardTests.m in Sources */,
-				9078F3511839B1DA00EA23F5 /* AssignmentTable.m in Sources */,
 				9078F3571839B1DA00EA23F5 /* VirtualInstrument.m in Sources */,
 				9078F3551839B1DA00EA23F5 /* NoteNumDict.m in Sources */,
 				9078F3531839B1DA00EA23F5 /* MIDINote.m in Sources */,

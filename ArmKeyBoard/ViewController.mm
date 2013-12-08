@@ -19,7 +19,9 @@
 #import "MIDINote.h"
 #import "NoteNumDict.h"
 #import "VirtualInstrument.h"
-#import "AssignmentTable.h"
+
+// Import Hierarchical Scale
+#import "HierarchicalScale.h"
 
 //#define CANNY
 //#define HULL
@@ -61,7 +63,9 @@ using namespace std;
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
 @property (readonly) NoteNumDict *Dict;
-@property (readonly) AssignmentTable *AST;
+
+/* Hierarchical Scale */
+@property (readonly) HierarchicalScale *HS;
 
 @end
 
@@ -100,8 +104,8 @@ using namespace std;
         _Dict = [[NoteNumDict alloc] init];
     }
     
-    if (_AST == nil) {
-        _AST = [[AssignmentTable alloc] init];
+    if (_HS == nil) {
+        _HS = [[HierarchicalScale alloc] init];
     }
     
 }
