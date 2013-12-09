@@ -56,6 +56,7 @@ using namespace std;
     float heightRatio;
     float distRatio;
     double imagesize, screensize;
+    double RPN15, RPN17; // region per note for 15 note scale or 17 note scale
 }
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
@@ -319,26 +320,20 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 -(void) doContourOperationTarget: (cv::Mat &)targtImg  Src:(cv::Mat &)srcImg Mix:(cv::Mat &)mixImg{
     cv::Mat threshold_output;
     cv::Mat canny_output;
-    cv::Mat contourdrawing;
-    // tangkk - Contours are a vector of vector of points
     vector<vector<cv::Point> > contours;
     vector<cv::Point> outercontour;
-
-    //make sure there's exactly 20 contours extracted from the source
     thresh = 100;
     
-#pragma mark - Find and draw each contour
     contours.clear();
+    outercontour.clear();
     hierarchy.clear();
         
 #ifdef CANNY
     cv::Canny( targtImg, canny_output, thresh, thresh*2, 3 );
     findContours( canny_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
-    contourdrawing = cv::Mat::zeros( canny_output.size(), CV_8UC4 );
 #else
     cv::threshold( targtImg, threshold_output, thresh, 255, cv::THRESH_BINARY );
     findContours( threshold_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
-    contourdrawing = cv::Mat::zeros( threshold_output.size(), CV_8UC4 );
 #endif
 
 #pragma mark - delete some small contours and the corresponding hierarchy nodes.
@@ -348,9 +343,9 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         cout << *ih << "\n";
     }
     
-    
     int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2, so that this area is correspond to the real image
     mycontours.clear();
+    contourmark.clear();
     outerarea = imagesize;
     cout << "******Nodes to be deleted" << "\n";
     for( int i = 0; i< contours.size(); i++) {
@@ -361,13 +356,18 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             outerarea -= area;
             outercontour = contours[i]; // This is a fake contour
         }
-        else
+        else {
             deleteHierachyNode(hierarchy, i);
+        }
     }
 #pragma mark - outer contours
-    mycontours.push_back(outercontour);
-    contourmark.push_back(-1);
-    cout << "******outerArea******\n" << outerarea << "\n";
+    //FIXME: Here I should actually add a outer contour even in the case that no contours are detected, in which case the outer contour should
+    // be the contour of the screen.
+    if (mycontours.size()) {
+        mycontours.push_back(outercontour);
+        contourmark.push_back(-1);
+        cout << "******outerArea******\n" << outerarea << "\n";
+    }
     
     /******Print out the new hierarchy******/
     cout << "******New Hierarchy******\n";
@@ -380,8 +380,10 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     for (vector<int>::iterator i = contourmark.begin(), e = contourmark.end(); i != e; ++i) {
         cout << (*i) << "\n";
     }
-
-    [self sortContours:mycontours withMarks:contourmark];
+    
+    if (mycontours.size()) {
+        [self sortContours:mycontours withMarks:contourmark];
+    }
     
     cout << "******sorted contourmark****** \n";
     for (vector<int>::iterator i = contourmark.begin(), e = contourmark.end(); i != e; ++i) {
@@ -390,25 +392,6 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     
 #pragma mark - draw contours
     cv::RNG rng(12345);
-    for( int i = 0; i< mycontours.size(); i++ ) {
-        cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-        cv::drawContours( contourdrawing, mycontours, i, color, 1, 8, hierarchy, 0, cv::Point() );
-    }
-    
-    for( int i = 0; i< mycontours.size(); i++ ) {
-        cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-        cv::drawContours( contourdrawing, mycontours, i, color, 1, 8, hierarchy, 0, cv::Point() );
-    }
-    
-    /*************************Find the convex hull object for each contour********************************/
-    myhulls.clear();
-    vector<vector<cv::Point> >hull( mycontours.size() );
-    for( size_t i = 0; i < mycontours.size(); i++ ) {
-        cv::convexHull( cv::Mat(mycontours[i]), hull[i], false );
-        myhulls.push_back(hull[i]);
-    }
-    
-    /// Draw contours + hull results
     cv::Mat drawing;
 #ifdef CANNY
     drawing = cv::Mat::zeros( canny_output.size(), CV_8UC4 );
@@ -417,6 +400,14 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 #endif
     
 #ifdef HULL
+    /*************************Find the convex hull object for each contour********************************/
+    myhulls.clear();
+    vector<vector<cv::Point> >hull( mycontours.size());
+    for( size_t i = 0; i < mycontours.size(); i++ ) {
+        cv::convexHull( cv::Mat(mycontours[i]), hull[i], false );
+        myhulls.push_back(hull[i]);
+    }
+    
     for( size_t i = 0; i< myhulls.size(); i++ )
     {
         cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
@@ -494,6 +485,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         
         imagesize = selectedImage.size.width * selectedImage.size.height;
         screensize = self.view.frame.size.width * self.view.frame.size.height;
+        RPN15 = screensize / 15;
+        RPN17 = screensize / 17;
         cout << "image size x = " << selectedImage.size.width << " y= " << selectedImage.size.height << "size = " << imagesize << "\n";
         cout << "screen size x = " << self.view.frame.size.width << " y=" << self.view.frame.size.height << "size = " << screensize <<"\n";
         widthRatio = selectedImage.size.width / self.view.frame.size.width;
@@ -507,7 +500,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         _mainImage.image = [self ConvexHullProcessSrcImage:selectedImage];
         
         // Perform the algorithm on to the contours to produce the region-scale mapping
-        regions2scale(mycontours, region2scale);
+        regions2scale(mycontours, _HS, region2scale);
     }
     
     [picker dismissViewControllerAnimated:YES completion:nil];
@@ -553,8 +546,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
  record them and let real people to evaluate the musicality of the songs
  */
 
-static void regions2scale (vector<vector<cv::Point> > &regions, map<int, vector<int> > &regionscale) {
-    
+static void regions2scale (vector<vector<cv::Point> > &regions, HierarchicalScale *hs,map<int, vector<int> > &regionscale) {
+    // testcaes: map a C lydian scale to the regions
 }
 
 static int context2noteNum (int x, int y, float dist, int hullNum, int R, int G, int B) {
