@@ -38,15 +38,6 @@
 
 @interface HierarchicalScale : NSObject
 
-@property (readonly, nonatomic) NSArray *Lydian;
-@property (readonly, nonatomic) NSArray *Ionian;
-@property (readonly, nonatomic) NSArray *Mixolydian;
-@property (readonly, nonatomic) NSArray *Dorian;
-@property (readonly, nonatomic) NSArray *Aeolian;
-@property (readonly, nonatomic) NSArray *Phrygian;
-@property (readonly, nonatomic) NSArray *Locrian;
-@property (readonly, nonatomic) NSArray *LydianFlat7;
-@property (readonly, nonatomic) NSArray *Altered;
-@property (readonly, nonatomic) NSArray *SymmetricalDiminished;
+- (NSArray *) getScale:(NSString *)scaleName;
 
 @end

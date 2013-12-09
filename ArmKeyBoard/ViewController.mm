@@ -485,8 +485,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         
         imagesize = selectedImage.size.width * selectedImage.size.height;
         screensize = self.view.frame.size.width * self.view.frame.size.height;
-        RPN15 = screensize / 15;
-        RPN17 = screensize / 17;
+        RPN15 = imagesize / 15;
+        RPN17 = imagesize / 17;
         cout << "image size x = " << selectedImage.size.width << " y= " << selectedImage.size.height << "size = " << imagesize << "\n";
         cout << "screen size x = " << self.view.frame.size.width << " y=" << self.view.frame.size.height << "size = " << screensize <<"\n";
         widthRatio = selectedImage.size.width / self.view.frame.size.width;
@@ -500,7 +500,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         _mainImage.image = [self ConvexHullProcessSrcImage:selectedImage];
         
         // Perform the algorithm on to the contours to produce the region-scale mapping
-        regions2scale(mycontours, _HS, region2scale);
+        [self region2hs:@"Lydian"];
     }
     
     [picker dismissViewControllerAnimated:YES completion:nil];
@@ -546,8 +546,27 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
  record them and let real people to evaluate the musicality of the songs
  */
 
-static void regions2scale (vector<vector<cv::Point> > &regions, HierarchicalScale *hs,map<int, vector<int> > &regionscale) {
-    // testcaes: map a C lydian scale to the regions
+- (void) region2hs:(NSString *) scaleName {
+    // Note that when this function is called the mycontours and contourmark are already sorted in descending order. The outer contour is also included.
+    for (int i = 0; i < mycontours.size(); i++) {
+        vector<cv::Point> contour = mycontours[i];
+        double contourarea;
+        if (contourmark[i] == -1) {
+            contourarea = outerarea;
+        } else {
+            contourarea = contourArea(contour);
+        }
+        
+        float ratio;
+        if ([scaleName isEqualToString:@"Altered"] || [scaleName isEqualToString:@"SymmetricalDiminished"]) {
+            ratio = contourarea / RPN17;
+        } else {
+            ratio = contourarea / RPN15;
+        }
+        
+        NSLog(@"ratio = %f", ratio);
+        
+    }
 }
 
 static int context2noteNum (int x, int y, float dist, int hullNum, int R, int G, int B) {

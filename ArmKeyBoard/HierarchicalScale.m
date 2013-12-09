@@ -8,6 +8,21 @@
 
 #import "HierarchicalScale.h"
 
+@interface HierarchicalScale ()
+
+@property (readonly, nonatomic) NSArray *Lydian;
+@property (readonly, nonatomic) NSArray *Ionian;
+@property (readonly, nonatomic) NSArray *Mixolydian;
+@property (readonly, nonatomic) NSArray *Dorian;
+@property (readonly, nonatomic) NSArray *Aeolian;
+@property (readonly, nonatomic) NSArray *Phrygian;
+@property (readonly, nonatomic) NSArray *Locrian;
+@property (readonly, nonatomic) NSArray *LydianFlat7;
+@property (readonly, nonatomic) NSArray *Altered;
+@property (readonly, nonatomic) NSArray *SymmetricalDiminished;
+
+@end
+
 @implementation HierarchicalScale
 
 NSDictionary *midi2notename;
@@ -154,6 +169,19 @@ NSDictionary *midi2notename;
         return self;
     }
     return nil;
+}
+
+- (NSArray *)getScale:(NSString *)scaleName {
+    return [scaleName isEqualToString:@"Lydian"] ? _Lydian :
+    [scaleName isEqualToString:@"Ionian"] ? _Ionian :
+    [scaleName isEqualToString:@"Mixolydian"] ? _Mixolydian :
+    [scaleName isEqualToString:@"Dorian"] ? _Dorian :
+    [scaleName isEqualToString:@"Aeolian"] ? _Aeolian :
+    [scaleName isEqualToString:@"Phrygian"] ? _Phrygian :
+    [scaleName isEqualToString:@"Locrian"] ? _Locrian :
+    [scaleName isEqualToString:@"LydianFlat7"] ? _LydianFlat7 :
+    [scaleName isEqualToString:@"Altered"] ? _Altered :
+    [scaleName isEqualToString:@"SymmetricalDiminished"] ? _SymmetricalDiminished : 0;
 }
 
 - (void) printScale:(NSArray *) scale withName:(NSString *)name {
