@@ -46,7 +46,7 @@ using namespace std;
     vector<vector<cv::Point> > mycontours;
     vector<vector<cv::Point> > myhulls;
     vector<int> contourmark; // This is to mark the original contour number to the mycontour number
-    // tangkk - So Vec4i indicates 4 entries in each elements of the vector. This is the contour hierarhcy (a tree structure)
+    double outerarea; // The imagesize excluding all the counted contour areas
     vector<cv::Vec4i> hierarchy;
     map<int, vector<int> > region2scale;
     cv::Mat srcMat;
@@ -55,6 +55,7 @@ using namespace std;
     float widthRatio;
     float heightRatio;
     float distRatio;
+    double imagesize, screensize;
 }
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
@@ -240,7 +241,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     CGPoint center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
     
     cout << "sortContours...\n";
-    for (int i = 0; i < conts.size(); i++) {
+    for (int i = 0; i < conts.size() - 1; i++) { // The last contour is a null for outercontour
         vector<cv::Point> cont = conts[i];
         int nodeNum = marks[i];
         cout << "******contour number****** ----> " << nodeNum << "\n";
@@ -283,6 +284,13 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         score.push_back(indscore);
     }
     
+    // Deal with the outer contour, whose is marked by -1, with only the area score and whose underlying contour is a fake one.
+    vector<int> outerscore;
+    int outerareascore = outerarea /(distRatio * distRatio);
+    outerscore.push_back(conts.size() - 1);
+    outerscore.push_back(outerareascore);
+    score.push_back(outerscore);
+    
     cout << "******original score vectors****** \n";
     for (vector<vector<int> >::iterator i = score.begin(), e = score.end(); i != e; ++i) {
         cout << (*i)[0] << "," << (*i)[1] << "\n";
@@ -314,6 +322,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     cv::Mat contourdrawing;
     // tangkk - Contours are a vector of vector of points
     vector<vector<cv::Point> > contours;
+    vector<cv::Point> outercontour;
 
     //make sure there's exactly 20 contours extracted from the source
     thresh = 100;
@@ -339,18 +348,27 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         cout << *ih << "\n";
     }
     
+    
     int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2, so that this area is correspond to the real image
     mycontours.clear();
+    outerarea = imagesize;
     cout << "******Nodes to be deleted" << "\n";
     for( int i = 0; i< contours.size(); i++) {
         double area = contourArea(contours[i]);
         if (area > contourminScaled) {
             mycontours.push_back(contours[i]);
             contourmark.push_back(i);
+            outerarea -= area;
+            outercontour = contours[i]; // This is a fake contour
         }
         else
             deleteHierachyNode(hierarchy, i);
     }
+#pragma mark - outer contours
+    mycontours.push_back(outercontour);
+    contourmark.push_back(-1);
+    cout << "******outerArea******\n" << outerarea << "\n";
+    
     /******Print out the new hierarchy******/
     cout << "******New Hierarchy******\n";
     for (vector<cv::Vec4i>::iterator ih = hierarchy.begin(), eh = hierarchy.end(); ih != eh ; ++ih ) {
@@ -474,8 +492,10 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         _mainImage.contentMode = UIViewContentModeScaleAspectFit;
         //_mainImage.contentMode = UIViewContentModeScaleAspectFill;
         
-        cout << "image size x = " << selectedImage.size.width << " y= " << selectedImage.size.height << "\n";
-        cout << "screen size x = " << self.view.frame.size.width << " y=" << self.view.frame.size.height << "\n";
+        imagesize = selectedImage.size.width * selectedImage.size.height;
+        screensize = self.view.frame.size.width * self.view.frame.size.height;
+        cout << "image size x = " << selectedImage.size.width << " y= " << selectedImage.size.height << "size = " << imagesize << "\n";
+        cout << "screen size x = " << self.view.frame.size.width << " y=" << self.view.frame.size.height << "size = " << screensize <<"\n";
         widthRatio = selectedImage.size.width / self.view.frame.size.width;
         heightRatio = selectedImage.size.height / self.view.frame.size.height;
         distRatio = sqrt(widthRatio*widthRatio + heightRatio*heightRatio);
