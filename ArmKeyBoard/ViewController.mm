@@ -548,6 +548,10 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 
 - (void) region2hs:(NSString *) scaleName {
     // Note that when this function is called the mycontours and contourmark are already sorted in descending order. The outer contour is also included.
+    int mapstart = 0;
+    float accum = 0;
+    region2scale.clear();
+    
     for (int i = 0; i < mycontours.size(); i++) {
         vector<cv::Point> contour = mycontours[i];
         double contourarea;
@@ -564,8 +568,48 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             ratio = contourarea / RPN15;
         }
         
+        int contmark = contourmark[i];
+        NSLog(@"contmark: %d", contmark);
         NSLog(@"ratio = %f", ratio);
         
+        
+        NSArray *scale = [_HS getScale:scaleName];
+        if (ratio >= 1) {
+            // map notes to regions
+            int number = floor(ratio);
+            vector<int> notes;
+            for (int j = mapstart; j < MIN(mapstart + number, scale.count); j++) {
+                notes.push_back([[scale objectAtIndex:j] integerValue]);
+            }
+            // Finally we insert an entry to the map
+            region2scale[contmark] = notes;
+            mapstart += number;
+        } else {
+            // map regions to notes
+            vector<int> notes;
+            notes.push_back([[scale objectAtIndex:mapstart] integerValue]);
+            region2scale[contmark] = notes;
+            accum += ratio;
+            if (accum >= 1) {
+                accum = 0;
+                mapstart++;
+                if (mapstart >= scale.count) {
+                    mapstart = scale.count - 1;
+                }
+            }
+        }
+    }
+    
+    // print out the regsion2scale map
+    for (map<int, vector<int> >::iterator I = region2scale.begin(), E = region2scale.end(); I != E; ++I) {
+        int key = (*I).first;
+        vector<int> value = (*I).second;
+        NSLog(@"key = %d", key);
+        cout << "Value = ";
+        for (vector<int>::iterator IV = value.begin(), EV = value.end(); IV != EV; ++IV) {
+            cout << (*IV) << ",";
+        }
+        cout << "\n";
     }
 }
 

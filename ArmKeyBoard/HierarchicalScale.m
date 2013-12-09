@@ -21,6 +21,17 @@
 @property (readonly, nonatomic) NSArray *Altered;
 @property (readonly, nonatomic) NSArray *SymmetricalDiminished;
 
+@property (readonly, nonatomic) NSArray *LydianSeq;
+@property (readonly, nonatomic) NSArray *IonianSeq;
+@property (readonly, nonatomic) NSArray *MixolydianSeq;
+@property (readonly, nonatomic) NSArray *DorianSeq;
+@property (readonly, nonatomic) NSArray *AeolianSeq;
+@property (readonly, nonatomic) NSArray *PhrygianSeq;
+@property (readonly, nonatomic) NSArray *LocrianSeq;
+@property (readonly, nonatomic) NSArray *LydianFlat7Seq;
+@property (readonly, nonatomic) NSArray *AlteredSeq;
+@property (readonly, nonatomic) NSArray *SymmetricalDiminishedSeq;
+
 @end
 
 @implementation HierarchicalScale
@@ -94,6 +105,7 @@ NSDictionary *midi2notename;
          L2:  2   #4   6
         ****************************************/
         _Lydian = @[@[@0, @7, @4, @11, @12, @19, @16, @23, @24],@[@2, @6, @9, @14, @18, @21]];
+        _LydianSeq = @[@0, @7, @4, @11, @12, @19, @16, @23, @24, @2, @6, @9, @14, @18, @21];
         [self printScale:_Lydian withName:@"_Lydian"];
         
         /****** Ionian scale hierarchy ******
@@ -102,6 +114,7 @@ NSDictionary *midi2notename;
          L3: 4
          ****************************************/
         _Ionian = @[@[@0, @7, @4, @11, @12, @19, @16, @23, @24],@[@2, @9, @14, @21], @[@5, @17]];
+        _IonianSeq = @[@0, @7, @4, @11, @12, @19, @16, @23, @24,@2, @9, @14, @21, @5, @17];
         [self printScale:_Ionian withName:@"_Ionian"];
         
         /****** Mixolydian scale hierarchy ******
@@ -110,6 +123,7 @@ NSDictionary *midi2notename;
          L3: 4
          ****************************************/
         _Mixolydian = @[@[@0, @7, @4, @10, @12, @19, @16, @22, @24],@[@2, @9, @14, @21], @[@5, @17]];
+        _MixolydianSeq = @[@0, @7, @4, @10, @12, @19, @16, @22, @24,@2, @9, @14, @21, @5, @17];
         [self printScale:_Mixolydian withName:@"_Mixolydian"];
         
         /****** Dorian scale hierarchy ******
@@ -118,6 +132,7 @@ NSDictionary *midi2notename;
          L3: 4
          ****************************************/
         _Dorian = @[@[@0, @7, @3, @10, @12, @19, @15, @22, @24],@[@2, @9, @14, @21], @[@5, @17]];
+        _DorianSeq = @[@0, @7, @3, @10, @12, @19, @15, @22, @24,@2, @9, @14, @21, @5, @17];
         [self printScale:_Dorian withName:@"_Dorian"];
         
         /****** Aeolian scale hierarchy ******
@@ -126,6 +141,7 @@ NSDictionary *midi2notename;
          L3: b6
          ****************************************/
         _Aeolian= @[@[@0, @7, @3, @10, @12, @19, @15, @22, @24],@[@2, @5, @14, @17], @[@8, @20]];
+        _AeolianSeq= @[@0, @7, @3, @10, @12, @19, @15, @22, @24,@2, @5, @14, @17, @8, @20];
         [self printScale:_Aeolian withName:@"_Aeolian"];
         
         /****** Phrygian scale hierarchy ******
@@ -134,6 +150,7 @@ NSDictionary *midi2notename;
          L3: b2 b6
          ****************************************/
         _Phrygian= @[@[@0, @7, @3, @10, @12, @19, @15, @22, @24],@[@5, @17], @[@1, @8, @13, @20]];
+        _PhrygianSeq= @[@0, @7, @3, @10, @12, @19, @15, @22, @24,@5, @17, @1, @8, @13, @20];
         [self printScale:_Phrygian withName:@"_Phrygian"];
         
         /****** Locrian scale hierarchy ******
@@ -142,6 +159,7 @@ NSDictionary *midi2notename;
          L3: b2
          ****************************************/
         _Locrian= @[@[@0, @6, @3, @10, @12, @18, @15, @22, @24],@[@5, @8, @17, @20], @[@1, @13]];
+        _LocrianSeq= @[@0, @6, @3, @10, @12, @18, @15, @22, @24,@5, @8, @17, @20, @1, @13];
         [self printScale:_Locrian withName:@"_Locrian"];
         
         /****** Lydian flat 7 scale hierarchy ******
@@ -149,6 +167,7 @@ NSDictionary *midi2notename;
          L2:  2   #4   6
          ****************************************/
         _LydianFlat7 = @[@[@0, @7, @4, @10, @12, @19, @16, @22, @24],@[@2, @6, @9, @14, @18, @21]];
+        _LydianFlat7Seq = @[@0, @7, @4, @10, @12, @19, @16, @22, @24,@2, @6, @9, @14, @18, @21];
         [self printScale:_LydianFlat7 withName:@"_LydianFlat7"];
         
         /****** Altered scale hierarchy ******
@@ -157,12 +176,14 @@ NSDictionary *midi2notename;
          L3: 5
          ****************************************/
         _Altered= @[@[@0, @4, @10, @12, @16, @22, @24],@[@6, @8, @1, @3, @18, @20, @13, @15], @[@7, @19]];
+        _AlteredSeq= @[@0, @4, @10, @12, @16, @22, @24,@6, @8, @1, @3, @18, @20, @13, @15, @7, @19];
         [self printScale:_Altered withName:@"_Altered"];
         
         /****** SymmetricalDiminished scale hierarchy ******
          L1:  1  b2  #2   3  #4  5   6  b7
          ****************************************/
         _SymmetricalDiminished= @[@[@0, @1, @3, @4, @6, @7, @9, @10, @12, @13, @15, @16, @18, @19, @21, @22, @24]];
+        _SymmetricalDiminishedSeq= @[@0, @1, @3, @4, @6, @7, @9, @10, @12, @13, @15, @16, @18, @19, @21, @22, @24];
         [self printScale:_SymmetricalDiminished withName:@"_SymmetricalDiminished"];
         
         
@@ -172,16 +193,16 @@ NSDictionary *midi2notename;
 }
 
 - (NSArray *)getScale:(NSString *)scaleName {
-    return [scaleName isEqualToString:@"Lydian"] ? _Lydian :
-    [scaleName isEqualToString:@"Ionian"] ? _Ionian :
-    [scaleName isEqualToString:@"Mixolydian"] ? _Mixolydian :
-    [scaleName isEqualToString:@"Dorian"] ? _Dorian :
-    [scaleName isEqualToString:@"Aeolian"] ? _Aeolian :
-    [scaleName isEqualToString:@"Phrygian"] ? _Phrygian :
-    [scaleName isEqualToString:@"Locrian"] ? _Locrian :
-    [scaleName isEqualToString:@"LydianFlat7"] ? _LydianFlat7 :
-    [scaleName isEqualToString:@"Altered"] ? _Altered :
-    [scaleName isEqualToString:@"SymmetricalDiminished"] ? _SymmetricalDiminished : 0;
+    return [scaleName isEqualToString:@"Lydian"] ? _LydianSeq :
+    [scaleName isEqualToString:@"Ionian"] ? _IonianSeq :
+    [scaleName isEqualToString:@"Mixolydian"] ? _MixolydianSeq :
+    [scaleName isEqualToString:@"Dorian"] ? _DorianSeq :
+    [scaleName isEqualToString:@"Aeolian"] ? _AeolianSeq :
+    [scaleName isEqualToString:@"Phrygian"] ? _PhrygianSeq :
+    [scaleName isEqualToString:@"Locrian"] ? _LocrianSeq :
+    [scaleName isEqualToString:@"LydianFlat7"] ? _LydianFlat7Seq :
+    [scaleName isEqualToString:@"Altered"] ? _AlteredSeq :
+    [scaleName isEqualToString:@"SymmetricalDiminished"] ? _SymmetricalDiminishedSeq : 0;
 }
 
 - (void) printScale:(NSArray *) scale withName:(NSString *)name {
