@@ -500,7 +500,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         _mainImage.image = [self ConvexHullProcessSrcImage:selectedImage];
         
         // Perform the algorithm on to the contours to produce the region-scale mapping
-        [self region2hs:@"Lydian"];
+        [self region2hs:@"Locrian" withTonic:60];
     }
     
     [picker dismissViewControllerAnimated:YES completion:nil];
@@ -546,7 +546,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
  record them and let real people to evaluate the musicality of the songs
  */
 
-- (void) region2hs:(NSString *) scaleName {
+//FIXME: change the scale notes according to the tonic
+- (void) region2hs:(NSString *) scaleName withTonic:(UInt8)tonic {
     // Note that when this function is called the mycontours and contourmark are already sorted in descending order. The outer contour is also included.
     int mapstart = 0;
     float accum = 0;
@@ -579,7 +580,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             int number = floor(ratio);
             vector<int> notes;
             for (int j = mapstart; j < MIN(mapstart + number, scale.count); j++) {
-                notes.push_back([[scale objectAtIndex:j] integerValue]);
+                notes.push_back([[scale objectAtIndex:j] integerValue] + tonic);
             }
             // Finally we insert an entry to the map
             region2scale[contmark] = notes;
@@ -587,7 +588,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         } else {
             // map regions to notes
             vector<int> notes;
-            notes.push_back([[scale objectAtIndex:mapstart] integerValue]);
+            notes.push_back([[scale objectAtIndex:mapstart] integerValue] + tonic);
             region2scale[contmark] = notes;
             accum += ratio;
             if (accum >= 1) {
@@ -613,14 +614,20 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
 }
 
-static int context2noteNum (int x, int y, float dist, int hullNum, int R, int G, int B) {
-    return 80;
+// FIXME: This is the fine detail mapping within a given region with a given set of notes: 1. regular mapping, 2. distributed mapping
+static int context2noteNum (int x, int y, float dist, int contourNum, int R, int G, int B, vector<int> &noteset) {
+    int numberofNotes = noteset.size();
+    // Make sure every note within this region get chance to show up
+    // A simple but workable approach:
+    int noteIdx = ((x + y) % 10 + (R + G + B)) % numberofNotes;
+    
+    return noteset[noteIdx];
 }
 
 - (void) checkInsidePosX:(int)x Y:(int)y {
     bool isInside = false;
     float dist;
-    int hullNum;
+    int contourNum;
     
     // The pass in x and y are the x,y value  to the screen space, we transform it to the image space
     int scaleX, scaleY;
@@ -639,24 +646,29 @@ static int context2noteNum (int x, int y, float dist, int hullNum, int R, int G,
         cout << "RGB = " << Red << "," << Green << "," << Blue << "\n";
     }
     
-    //  Calculate the distance and scale it down the dist to the screen space
+    //  Calculate the distance and scale it down the dist to the screen space, take the innermost contour's noteset.
     for (int i = 0; i < mycontours.size(); i++) {
         dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
         if(dist > 0) {
             dist /= distRatio;
             cout << "The current pos is in contour " << contourmark[i] << " with distance " << dist << "\n";
             isInside = true;
-            hullNum = i;
+            contourNum = contourmark[i];
         }
     }
     if (!isInside) {
-        cout << "The current pos is outside the contour" << "\n";
-        hullNum = 0;
+        cout << "The current pos is in contour -1" << "\n";
+        contourNum = -1;
     }
-    cout << "current pos x = " << x << " y = " << y  << "\n";
+    cout << "current pos x = " << x << " y = " << y  << " , " << "contourNum = " << contourNum << "\n";
+    vector <int> noteset = region2scale[contourNum];
     
     // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space, and generate a note
-    noteNum = context2noteNum(x, y, dist, hullNum, Red, Green, Blue);
+    // FIXME: every region should at least produce a note
+    if (noteset.size() > 0) {
+        cout << "there's a note ! \n";
+        noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset);
+    }
     
     MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:100 SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
