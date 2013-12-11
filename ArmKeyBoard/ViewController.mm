@@ -507,7 +507,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 
 // Delegate method for the pick controller media browser
 - (void) imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
-    NSLog(@"delegate called!");
+    NSLog(@"imagePickerController called!");
     
     NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
     UIImage *selectedImage;
@@ -540,6 +540,12 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         [self region2hs:@"Locrian" withTonic:60];
     }
     
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+    NSLog(@"imagePickerControllerDidCancel called!");
+    [self refreshImage];
     [picker dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -625,7 +631,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         } else {
             // map regions to notes
             vector<int> notes;
-            notes.push_back([[scale objectAtIndex:mapstart] integerValue] + tonic);
+            notes.push_back([[scale objectAtIndex:MIN(mapstart, scale.count - 1)] integerValue] + tonic);
             region2scale[contmark] = notes;
             accum += ratio;
             if (accum >= 1) {
@@ -736,7 +742,6 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         UIButton *button = [_csButtonGrid objectAtIndex:i];
         [button setHidden:NO];
     }
-    //[self startMediaBrowserFromViewController:self usingDelegate:self];
 }
 
 - (void)didReceiveMemoryWarning
