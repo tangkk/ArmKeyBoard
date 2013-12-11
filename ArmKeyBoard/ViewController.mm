@@ -58,12 +58,18 @@ using namespace std;
     float distRatio;
     double imagesize, screensize;
     double RPN15, RPN17; // region per note for 15 note scale or 17 note scale
+    
+    int currentCSTag;
+    vector<pair<NSString *, NSString *> > chordScaleSpace;
+    vector<pair<int, int> > chordScaleIntSpace;
 }
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
 @property (strong, nonatomic) IBOutlet UIButton *chooseImage;
-
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *csButtonGrid;
+@property (strong, nonatomic) UIImage *buttonClickedImg;
+@property (strong, nonatomic) UIImage *buttonUnClickedImg;
+
 @property (strong, nonatomic) IBOutlet UIPickerView *Picker;
 @property (strong, nonatomic) NSArray *chordRootArray;
 @property (strong, nonatomic) NSArray *scaleArray;
@@ -103,8 +109,21 @@ using namespace std;
     brush = 2;
     [self.view addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)]];
     
-    _chordRootArray = [[NSArray alloc] initWithObjects:@"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
-    _scaleArray = [[NSArray alloc] initWithObjects:@"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"LydianFlat7", @"Altered", @"SymmetricalDiminished", nil];
+    _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
+    _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"LydianFlat7", @"Altered", @"SymmetricalDiminished", nil];
+    _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
+    _buttonUnClickedImg = [UIImage imageNamed:@"Chord-Scale"];
+    currentCSTag = -1;
+    
+    // initialize the chordScaleSpace
+    pair<NSString *, NSString *> none;
+    pair<int, int> noneInt;
+    none = make_pair(@"None", @"None");
+    noneInt = make_pair(0, 0);
+    for (int i = 0; i < _csButtonGrid.count; i++) {
+        chordScaleSpace.push_back(none);
+        chordScaleIntSpace.push_back(noneInt);
+    }
     
 }
 
@@ -726,6 +745,17 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     // Dispose of any resources that can be recreated.
 }
 
+#pragma mark - chord-scale zone
+- (IBAction)buttonClicker:(id)sender {
+    UIButton *button = (UIButton *)sender;
+    int tag = button.tag;
+    currentCSTag = tag;
+    
+    [_Picker selectRow:chordScaleIntSpace[currentCSTag].first inComponent:0 animated:YES ];
+    [_Picker selectRow:chordScaleIntSpace[currentCSTag].second inComponent:1 animated:YES ];
+    
+}
+
 /****** Required by Pickerview controller ******/
 // returns the number of 'columns' to display.
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
@@ -735,9 +765,9 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 // returns the # of rows in each component..
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
     if (component == 0) {
-        return 12;
+        return [_chordRootArray count];
     } else {
-        return 10;
+        return [_scaleArray count];
     }
 }
 
@@ -763,7 +793,24 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 }
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
+    // Set the chord-scale of the one chord-scale note via this
     
+    if (component == 0) {
+        chordScaleSpace[currentCSTag].first =  [_chordRootArray objectAtIndex:row];
+        chordScaleIntSpace[currentCSTag].first = row;
+    } else {
+        chordScaleSpace[currentCSTag].second = [_scaleArray objectAtIndex:row];
+        chordScaleIntSpace[currentCSTag].second = row;
+    }
+    
+    if (chordScaleIntSpace[currentCSTag].first == 0 || chordScaleIntSpace[currentCSTag].second == 0) {
+        UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:currentCSTag];
+        [button setBackgroundImage:_buttonUnClickedImg forState:UIControlStateNormal];
+    } else {
+        UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:currentCSTag];
+        [button setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
+    }
+
 }
 
 @end
