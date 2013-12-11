@@ -50,6 +50,7 @@ using namespace std;
     vector<cv::Vec4i> hierarchy;
     map<int, vector<int> > region2scale;
     cv::Mat srcMat;
+    bool playEnable;
     
     // Image : Screen Ratio
     float widthRatio;
@@ -61,6 +62,9 @@ using namespace std;
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
 @property (strong, nonatomic) IBOutlet UIButton *chooseImage;
+
+@property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *csButtonGrid;
+
 
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
@@ -91,9 +95,12 @@ using namespace std;
     heightRatio = 1;
     distRatio = 1;
     
+    playEnable = NO;
+    
     // Initialize drawing variables
     brush = 2;
     [self.view addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)]];
+    
 }
 
 - (void) musInfrastructureSetup {
@@ -465,7 +472,12 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 
 - (IBAction)showImageBrowser:(id)sender {
     NSLog(@"Action Called");
+    playEnable = YES;
     [_chooseImage setHidden:YES];
+    for (int i = 0 ; i < _csButtonGrid.count; i++) {
+        UIButton *button = [_csButtonGrid objectAtIndex:i];
+        [button setHidden:YES];
+    }
     [self startMediaBrowserFromViewController:self usingDelegate:self];
 }
 
@@ -498,6 +510,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         
         // Do Image processing using opencv here;
         _mainImage.image = [self ConvexHullProcessSrcImage:selectedImage];
+        [self.view bringSubviewToFront:_mainImage];
         
         // Perform the algorithm on to the contours to produce the region-scale mapping
         [self region2hs:@"Locrian" withTonic:60];
@@ -624,7 +637,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     return noteset[noteIdx];
 }
 
-- (void) checkInsidePosX:(int)x Y:(int)y {
+- (void) playAtPosX:(int)x Y:(int)y {
     bool isInside = false;
     float dist;
     int contourNum;
@@ -677,7 +690,9 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 - (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [touches anyObject];
     lastPoint = [touch locationInView:self.view];
-    [self checkInsidePosX:lastPoint.x Y:lastPoint.y];
+    if (playEnable) {
+        [self playAtPosX:lastPoint.x Y:lastPoint.y];
+    }
 }
 
 - (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -691,7 +706,12 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 - (void) refreshImage {
     path = [UIBezierPath bezierPath];
     self.mainImage.image = nil;
+    playEnable = NO;
     [_chooseImage setHidden:NO];
+    for (int i = 0 ; i < _csButtonGrid.count; i++) {
+        UIButton *button = [_csButtonGrid objectAtIndex:i];
+        [button setHidden:NO];
+    }
     //[self startMediaBrowserFromViewController:self usingDelegate:self];
 }
 
