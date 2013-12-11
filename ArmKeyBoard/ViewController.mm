@@ -64,7 +64,9 @@ using namespace std;
 @property (strong, nonatomic) IBOutlet UIButton *chooseImage;
 
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *csButtonGrid;
-
+@property (strong, nonatomic) IBOutlet UIPickerView *Picker;
+@property (strong, nonatomic) NSArray *chordRootArray;
+@property (strong, nonatomic) NSArray *scaleArray;
 
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
@@ -100,6 +102,9 @@ using namespace std;
     // Initialize drawing variables
     brush = 2;
     [self.view addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)]];
+    
+    _chordRootArray = [[NSArray alloc] initWithObjects:@"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
+    _scaleArray = [[NSArray alloc] initWithObjects:@"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"LydianFlat7", @"Altered", @"SymmetricalDiminished", nil];
     
 }
 
@@ -719,6 +724,46 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+/****** Required by Pickerview controller ******/
+// returns the number of 'columns' to display.
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
+    return 2;
+}
+
+// returns the # of rows in each component..
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
+    if (component == 0) {
+        return 12;
+    } else {
+        return 10;
+    }
+}
+
+- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view {
+    if (component == 0) {
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
+        label.backgroundColor = [UIColor blackColor];
+        label.textColor = [UIColor whiteColor];
+        label.textAlignment = NSTextAlignmentCenter;
+        label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
+        label.text = [NSString stringWithFormat:@" %@", [_chordRootArray objectAtIndex:row]];
+        return label;
+    } else {
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
+        label.backgroundColor = [UIColor blackColor];
+        label.textColor = [UIColor whiteColor];
+        label.textAlignment = NSTextAlignmentCenter;
+        label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
+        label.text = [NSString stringWithFormat:@" %@", [_scaleArray objectAtIndex:row]];
+        return label;
+    }
+    
+}
+
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
+    
 }
 
 @end
