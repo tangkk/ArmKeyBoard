@@ -33,8 +33,6 @@ using namespace std;
 @interface ViewController () {
     // Drawing Elements
     UIBezierPath *path;
-    CGPoint PPoint;
-    CGPoint lastPoint;
     CGFloat brush;
     
     // threshold
@@ -81,6 +79,9 @@ using namespace std;
 @property (strong, nonatomic) UISwipeGestureRecognizer *swipeDown;
 @property (strong, nonatomic) UISwipeGestureRecognizer *swipeUp;
 @property (strong, nonatomic) UITapGestureRecognizer *tap;
+@property (strong, nonatomic) UITapGestureRecognizer *doubletap;
+@property (strong, nonatomic) UITapGestureRecognizer *tripletap;
+@property (strong, nonatomic) UITapGestureRecognizer *quadrupletap;
 
 @property (strong, nonatomic) IBOutlet UIPickerView *Picker;
 @property (strong, nonatomic) NSArray *chordRootArray;
@@ -129,15 +130,24 @@ using namespace std;
     _swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
+    _doubletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
+    _tripletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
+    _quadrupletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
     [_swipeLeft setDirection:UISwipeGestureRecognizerDirectionLeft];
     [_swipeRight setDirection:UISwipeGestureRecognizerDirectionRight];
     [_swipeDown setDirection:UISwipeGestureRecognizerDirectionDown];
     [_swipeUp setDirection:UISwipeGestureRecognizerDirectionUp];
+    [_doubletap setNumberOfTouchesRequired:2];
+    [_tripletap setNumberOfTouchesRequired:3];
+    [_quadrupletap setNumberOfTouchesRequired:4];
     [self.view addGestureRecognizer:_swipeLeft];
     [self.view addGestureRecognizer:_swipeRight];
     [self.view addGestureRecognizer:_swipeDown];
     [self.view addGestureRecognizer:_swipeUp];
     [self.view addGestureRecognizer:_tap];
+    [self.view addGestureRecognizer:_doubletap];
+    [self.view addGestureRecognizer:_tripletap];
+    [self.view addGestureRecognizer:_quadrupletap];
     
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
     _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"Lydianb7", @"Altered", @"SymDim", @"MelMinor", nil];
@@ -905,10 +915,40 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 #pragma mark - gestures
 //FIXME: should support multitouch (polyphonic)
 - (void)tapRecognized:(UITapGestureRecognizer *) sender {
-    lastPoint = [sender locationInView:self.view];
-    if (playEnable) {
-        [self playAtPosX:lastPoint.x Y:lastPoint.y];
+    if (sender.numberOfTouchesRequired == 1) {
+        CGPoint lastPoint = [sender locationInView:self.view];
+        if (playEnable) {
+            [self playAtPosX:lastPoint.x Y:lastPoint.y];
+        }
+    } else if (sender.numberOfTouchesRequired == 2) {
+        CGPoint lastPointFirst = [sender locationOfTouch:0 inView:self.view];
+        CGPoint lastPointSecond = [sender locationOfTouch:1 inView:self.view];
+        if (playEnable) {
+            [self playAtPosX:lastPointFirst.x Y:lastPointFirst.y];
+            [self playAtPosX:lastPointSecond.x Y:lastPointSecond.y];
+        }
+    } else if (sender.numberOfTouchesRequired == 3) {
+        CGPoint lastPointFirst = [sender locationOfTouch:0 inView:self.view];
+        CGPoint lastPointSecond = [sender locationOfTouch:1 inView:self.view];
+        CGPoint lastPointThird = [sender locationOfTouch:2 inView:self.view];
+        if (playEnable) {
+            [self playAtPosX:lastPointFirst.x Y:lastPointFirst.y];
+            [self playAtPosX:lastPointSecond.x Y:lastPointSecond.y];
+            [self playAtPosX:lastPointThird.x Y:lastPointThird.y];
+        }
+    } else if (sender.numberOfTouchesRequired == 4) {
+        CGPoint lastPointFirst = [sender locationOfTouch:0 inView:self.view];
+        CGPoint lastPointSecond = [sender locationOfTouch:1 inView:self.view];
+        CGPoint lastPointThird = [sender locationOfTouch:2 inView:self.view];
+        CGPoint lastPointFourth = [sender locationOfTouch:3 inView:self.view];
+        if (playEnable) {
+            [self playAtPosX:lastPointFirst.x Y:lastPointFirst.y];
+            [self playAtPosX:lastPointSecond.x Y:lastPointSecond.y];
+            [self playAtPosX:lastPointThird.x Y:lastPointThird.y];
+            [self playAtPosX:lastPointFourth.x Y:lastPointFourth.y];
+        }
     }
+    
 }
 
 /****** swipe gestures for switching between chord-scales******/
