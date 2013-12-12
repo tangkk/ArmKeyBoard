@@ -61,8 +61,14 @@ using namespace std;
     double RPN15, RPN17; // region per note for 15 note scale or 17 note scale
     
     int currentCSTag;
+    int currentCSIdx;
+    pair<NSString *, NSString *> currentCS;
+    NSString *currentOctave;
     vector<pair<NSString *, NSString *> > chordScaleSpace;
     vector<pair<int, int> > chordScaleIntSpace;
+    vector<NSString *> octaves;
+    vector<int> octavesInt;
+    int totalCS;
 }
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
@@ -74,10 +80,12 @@ using namespace std;
 @property (strong, nonatomic) UISwipeGestureRecognizer *swipeRight;
 @property (strong, nonatomic) UISwipeGestureRecognizer *swipeDown;
 @property (strong, nonatomic) UISwipeGestureRecognizer *swipeUp;
+@property (strong, nonatomic) UITapGestureRecognizer *tap;
 
 @property (strong, nonatomic) IBOutlet UIPickerView *Picker;
 @property (strong, nonatomic) NSArray *chordRootArray;
 @property (strong, nonatomic) NSArray *scaleArray;
+@property (strong, nonatomic) NSArray *octaveArray;
 
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
@@ -112,11 +120,14 @@ using namespace std;
     
     // Initialize drawing variables
     brush = 2;
+    
+    // Initialize view elements
     [self.view addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)]];
     _swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    _tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
     [_swipeLeft setDirection:UISwipeGestureRecognizerDirectionLeft];
     [_swipeRight setDirection:UISwipeGestureRecognizerDirectionRight];
     [_swipeDown setDirection:UISwipeGestureRecognizerDirectionDown];
@@ -125,23 +136,34 @@ using namespace std;
     [self.view addGestureRecognizer:_swipeRight];
     [self.view addGestureRecognizer:_swipeDown];
     [self.view addGestureRecognizer:_swipeUp];
+    [self.view addGestureRecognizer:_tap];
     
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
     _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"LydianFlat7", @"Altered", @"SymmetricalDiminished", nil];
+    _octaveArray = [[NSArray alloc] initWithObjects:@"0", @"1", @"2", @"3", @"4", @"5", @"6", @"7", @"8", nil];
     _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
     _buttonUnClickedImg = [UIImage imageNamed:@"Chord-Scale"];
     currentCSTag = 0;
-    
-    // initialize the chordScaleSpace
+    currentCSIdx = 0;
+    totalCS = 0;
     pair<NSString *, NSString *> none;
     pair<int, int> noneInt;
     none = make_pair(@"None", @"None");
     noneInt = make_pair(0, 0);
+    currentCS = none;
+    currentOctave = @"4";
     for (int i = 0; i < _csButtonGrid.count; i++) {
         chordScaleSpace.push_back(none);
         chordScaleIntSpace.push_back(noneInt);
+        octaves.push_back(@"4"); // octave 4 is the default
+        octavesInt.push_back(4);
     }
-    
+}
+
+- (void) viewWillAppear:(BOOL)animated {
+    [_Picker selectRow:0 inComponent:0 animated:YES ];
+    [_Picker selectRow:4 inComponent:1 animated:YES];
+    [_Picker selectRow:0 inComponent:2 animated:YES ];
 }
 
 - (void) musInfrastructureSetup {
@@ -519,6 +541,19 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         UIButton *button = [_csButtonGrid objectAtIndex:i];
         [button setHidden:YES];
     }
+    [_Picker setHidden:YES];
+    
+    // Calculate the total chord-scales (only consecutive chord-scale in the space count)
+    totalCS = 0;
+    for (int i = 0; i < chordScaleIntSpace.size(); i++) {
+        if (chordScaleIntSpace[i].first && chordScaleIntSpace[i].second) {
+            totalCS++;
+        } else {
+            break;
+        }
+    }
+    NSLog(@"totalCS: %d", totalCS);
+    
     [self startMediaBrowserFromViewController:self usingDelegate:self];
 }
 
@@ -554,7 +589,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         [self.view bringSubviewToFront:_mainImage];
         
         // Perform the algorithm on to the contours to produce the region-scale mapping
-        [self region2hs:@"Locrian" withTonic:60];
+        [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
     }
     
     [picker dismissViewControllerAnimated:YES completion:nil];
@@ -605,13 +640,14 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
  use WIJAM as a platform, auto master config, play a couple of songs with this keyboard and with the old one,
  record them and let real people to evaluate the musicality of the songs
  */
-
-//FIXME: change the scale notes according to the tonic
-- (void) region2hs:(NSString *) scaleName withTonic:(UInt8)tonic {
+- (void) region2hs:(NSString *) scaleName withTonic:(NSString *)tonic withOctave:(NSString *)oct{
     // Note that when this function is called the mycontours and contourmark are already sorted in descending order. The outer contour is also included.
     int mapstart = 0;
     float accum = 0;
     region2scale.clear();
+    NSString *compRoot = [[NSString alloc] initWithFormat:@"%@%@", tonic, oct];
+    NSLog(@"compRoot is %@", compRoot);
+    int root = [[_Dict.Dict objectForKey:compRoot] intValue];
     
     for (int i = 0; i < mycontours.size(); i++) {
         vector<cv::Point> contour = mycontours[i];
@@ -640,7 +676,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             int number = floor(ratio);
             vector<int> notes;
             for (int j = mapstart; j < MIN(mapstart + number, scale.count); j++) {
-                notes.push_back([[scale objectAtIndex:j] integerValue] + tonic);
+                notes.push_back([[scale objectAtIndex:j] integerValue] + root);
             }
             // Finally we insert an entry to the map
             region2scale[contmark] = notes;
@@ -648,7 +684,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         } else {
             // map regions to notes
             vector<int> notes;
-            notes.push_back([[scale objectAtIndex:MIN(mapstart, scale.count - 1)] integerValue] + tonic);
+            notes.push_back([[scale objectAtIndex:MIN(mapstart, scale.count - 1)] integerValue] + root);
             region2scale[contmark] = notes;
             accum += ratio;
             if (accum >= 1) {
@@ -734,22 +770,24 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [_VI playMIDI:Note];
 }
 
-- (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    UITouch *touch = [touches anyObject];
-    lastPoint = [touch locationInView:self.view];
-    if (playEnable) {
-        [self playAtPosX:lastPoint.x Y:lastPoint.y];
-    }
-}
+#pragma mark - tap gesture
+//- (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+//    UITouch *touch = [touches anyObject];
+//    lastPoint = [touch locationInView:self.view];
+//    if (playEnable) {
+//        [self playAtPosX:lastPoint.x Y:lastPoint.y];
+//    }
+//}
+//
+//- (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+//
+//}
+//
+//- (void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+//    
+//}
 
-- (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-
-}
-
-- (void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    
-}
-
+# pragma mark - refresh image
 - (void) refreshImage {
     path = [UIBezierPath bezierPath];
     self.mainImage.image = nil;
@@ -759,6 +797,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         UIButton *button = [_csButtonGrid objectAtIndex:i];
         [button setHidden:NO];
     }
+    [_Picker setHidden:NO];
 }
 
 - (void)didReceiveMemoryWarning
@@ -775,20 +814,23 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     currentCSTag = tag;
     
     [_Picker selectRow:chordScaleIntSpace[currentCSTag].first inComponent:0 animated:YES ];
-    [_Picker selectRow:chordScaleIntSpace[currentCSTag].second inComponent:1 animated:YES ];
+    [_Picker selectRow:octavesInt[currentCSTag] inComponent:1 animated:YES];
+    [_Picker selectRow:chordScaleIntSpace[currentCSTag].second inComponent:2 animated:YES ];
     
 }
 
 /****** Required by Pickerview controller ******/
 // returns the number of 'columns' to display.
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
-    return 2;
+    return 3;
 }
 
 // returns the # of rows in each component..
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
     if (component == 0) {
         return [_chordRootArray count];
+    } else if (component == 1) {
+        return [_octaveArray count];
     } else {
         return [_scaleArray count];
     }
@@ -803,7 +845,15 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
         label.text = [NSString stringWithFormat:@" %@", [_chordRootArray objectAtIndex:row]];
         return label;
-    } else {
+    } else if (component == 1) {
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
+        label.backgroundColor = [UIColor blackColor];
+        label.textColor = [UIColor whiteColor];
+        label.textAlignment = NSTextAlignmentCenter;
+        label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
+        label.text = [NSString stringWithFormat:@" %@", [_octaveArray objectAtIndex:row]];
+        return label;
+    }  else {
         UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
         label.backgroundColor = [UIColor blackColor];
         label.textColor = [UIColor whiteColor];
@@ -812,7 +862,6 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         label.text = [NSString stringWithFormat:@" %@", [_scaleArray objectAtIndex:row]];
         return label;
     }
-    
 }
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
@@ -821,6 +870,9 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     if (component == 0) {
         chordScaleSpace[currentCSTag].first =  [_chordRootArray objectAtIndex:row];
         chordScaleIntSpace[currentCSTag].first = row;
+    } else if (component == 1) {
+        octaves[currentCSTag] = [_octaveArray objectAtIndex:row];
+        octavesInt[currentCSTag] = row;
     } else {
         chordScaleSpace[currentCSTag].second = [_scaleArray objectAtIndex:row];
         chordScaleIntSpace[currentCSTag].second = row;
@@ -833,19 +885,51 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:currentCSTag];
         [button setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
     }
+    
+    currentCS = chordScaleSpace[0];
+    currentOctave = octaves[0];
+}
 
+#pragma mark - gestures
+//FIXME: should support multitouch (polyphonic)
+- (void)tapRecognized:(UITapGestureRecognizer *) sender {
+    lastPoint = [sender locationInView:self.view];
+    if (playEnable) {
+        [self playAtPosX:lastPoint.x Y:lastPoint.y];
+    }
 }
 
 /****** swipe gestures for switching between chord-scales******/
 - (void)swipeRecognized:(UISwipeGestureRecognizer *)sender {
-    if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
-        NSLog(@"SwipeRecognized Left");
-    } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
-        NSLog(@"SwipeRecognized Right");
-    } else if (sender.direction == UISwipeGestureRecognizerDirectionDown) {
-        NSLog(@"SwipeRecognized Down");
-    } else if (sender.direction == UISwipeGestureRecognizerDirectionUp) {
-        NSLog(@"SwipeRecognized Up");
+    if (playEnable && totalCS > 0) {
+        if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
+            if (currentCSIdx == 0) {
+                currentCSIdx = totalCS - 1;
+            } else {
+                currentCSIdx --;
+            }
+            currentCS = chordScaleSpace[currentCSIdx];
+            currentOctave = octaves[currentCSIdx];
+            // refresh the chord-scale and the mapping
+            [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+            NSLog(@"SwipeRecognized Left");
+        } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
+            if (currentCSIdx == totalCS - 1) {
+                currentCSIdx = 0;
+            } else {
+                currentCSIdx++;
+            }
+            currentCS = chordScaleSpace[currentCSIdx];
+            currentOctave = octaves[currentCSIdx];
+            // refresh the chord-scale and the mapping
+            [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+            NSLog(@"SwipeRecognized Right");
+        } else if (sender.direction == UISwipeGestureRecognizerDirectionDown) {
+            NSLog(@"SwipeRecognized Down");
+        } else if (sender.direction == UISwipeGestureRecognizerDirectionUp) {
+            NSLog(@"SwipeRecognized Up");
+        }
+        NSLog(@"currentCSIdx : %d", currentCSIdx);
     }
 }
 
