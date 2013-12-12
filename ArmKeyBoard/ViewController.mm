@@ -140,7 +140,7 @@ using namespace std;
     [self.view addGestureRecognizer:_tap];
     
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
-    _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"LydianFlat7", @"Altered", @"SymmetricalDiminished", nil];
+    _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"Lydianb7", @"Altered", @"SymDim", @"MelMinor", nil];
     _octaveArray = [[NSArray alloc] initWithObjects:@"0", @"1", @"2", @"3", @"4", @"5", @"6", @"7", nil];
     _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
     _buttonUnClickedImg = [UIImage imageNamed:@"Chord-Scale"];
@@ -670,7 +670,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         }
         
         float ratio;
-        if ([scaleName isEqualToString:@"Altered"] || [scaleName isEqualToString:@"SymmetricalDiminished"]) {
+        if ([scaleName isEqualToString:@"Altered"] || [scaleName isEqualToString:@"SymDim"]) {
             ratio = contourarea / RPN17;
         } else {
             ratio = contourarea / RPN15;

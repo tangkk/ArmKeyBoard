@@ -17,9 +17,10 @@
 @property (readonly, nonatomic) NSArray *Aeolian;
 @property (readonly, nonatomic) NSArray *Phrygian;
 @property (readonly, nonatomic) NSArray *Locrian;
-@property (readonly, nonatomic) NSArray *LydianFlat7;
+@property (readonly, nonatomic) NSArray *Lydianb7;
 @property (readonly, nonatomic) NSArray *Altered;
-@property (readonly, nonatomic) NSArray *SymmetricalDiminished;
+@property (readonly, nonatomic) NSArray *SymDim;
+@property (readonly, nonatomic) NSArray *MelMinor;
 
 @property (readonly, nonatomic) NSArray *LydianSeq;
 @property (readonly, nonatomic) NSArray *IonianSeq;
@@ -28,9 +29,10 @@
 @property (readonly, nonatomic) NSArray *AeolianSeq;
 @property (readonly, nonatomic) NSArray *PhrygianSeq;
 @property (readonly, nonatomic) NSArray *LocrianSeq;
-@property (readonly, nonatomic) NSArray *LydianFlat7Seq;
+@property (readonly, nonatomic) NSArray *Lydianb7Seq;
 @property (readonly, nonatomic) NSArray *AlteredSeq;
-@property (readonly, nonatomic) NSArray *SymmetricalDiminishedSeq;
+@property (readonly, nonatomic) NSArray *SymDimSeq;
+@property (readonly, nonatomic) NSArray *MelMinorSeq;
 
 @end
 
@@ -166,9 +168,9 @@ NSDictionary *midi2notename;
          L1:  1  5   3   b7
          L2:  2   #4   6
          ****************************************/
-        _LydianFlat7 = @[@[@0, @7, @4, @10, @12, @19, @16, @22, @24],@[@2, @6, @9, @14, @18, @21]];
-        _LydianFlat7Seq = @[@0, @7, @4, @10, @12, @19, @16, @22, @24,@2, @6, @9, @14, @18, @21];
-        [self printScale:_LydianFlat7 withName:@"_LydianFlat7"];
+        _Lydianb7 = @[@[@0, @7, @4, @10, @12, @19, @16, @22, @24],@[@2, @6, @9, @14, @18, @21]];
+        _Lydianb7Seq = @[@0, @7, @4, @10, @12, @19, @16, @22, @24,@2, @6, @9, @14, @18, @21];
+        [self printScale:_Lydianb7 withName:@"_Lydianb7"];
         
         /****** Altered scale hierarchy ******
          L1:  1  3   b7
@@ -179,12 +181,20 @@ NSDictionary *midi2notename;
         _AlteredSeq= @[@0, @4, @10, @12, @16, @22, @24,@6, @8, @1, @3, @18, @20, @13, @15, @7, @19];
         [self printScale:_Altered withName:@"_Altered"];
         
-        /****** SymmetricalDiminished scale hierarchy ******
+        /****** SymDim scale hierarchy ******
          L1:  1  b2  #2   3  #4  5   6  b7
          ****************************************/
-        _SymmetricalDiminished= @[@[@0, @1, @3, @4, @6, @7, @9, @10, @12, @13, @15, @16, @18, @19, @21, @22, @24]];
-        _SymmetricalDiminishedSeq= @[@0, @1, @3, @4, @6, @7, @9, @10, @12, @13, @15, @16, @18, @19, @21, @22, @24];
-        [self printScale:_SymmetricalDiminished withName:@"_SymmetricalDiminished"];
+        _SymDim= @[@[@0, @1, @3, @4, @6, @7, @9, @10, @12, @13, @15, @16, @18, @19, @21, @22, @24]];
+        _SymDimSeq= @[@0, @1, @3, @4, @6, @7, @9, @10, @12, @13, @15, @16, @18, @19, @21, @22, @24];
+        [self printScale:_SymDim withName:@"_SymDim"];
+        
+        /****** MelMinor scale hierarchy ******
+         L1:  1  5   b3   7
+         L2:  2  6  4
+         ****************************************/
+        _MelMinor = @[@[@0, @7, @3, @11, @12, @19, @15, @23, @24],@[@2, @9, @14, @21], @[@5, @17]];
+        _MelMinorSeq = @[@0, @7, @3, @11, @12, @19, @15, @23, @24,@2, @9, @14, @21, @5, @17];
+        [self printScale:_MelMinor withName:@"_MelMinor"];
         
         
         return self;
@@ -200,9 +210,10 @@ NSDictionary *midi2notename;
     [scaleName isEqualToString:@"Aeolian"] ? _AeolianSeq :
     [scaleName isEqualToString:@"Phrygian"] ? _PhrygianSeq :
     [scaleName isEqualToString:@"Locrian"] ? _LocrianSeq :
-    [scaleName isEqualToString:@"LydianFlat7"] ? _LydianFlat7Seq :
+    [scaleName isEqualToString:@"Lydianb7"] ? _Lydianb7Seq :
     [scaleName isEqualToString:@"Altered"] ? _AlteredSeq :
-    [scaleName isEqualToString:@"SymmetricalDiminished"] ? _SymmetricalDiminishedSeq : 0;
+    [scaleName isEqualToString:@"SymDim"] ? _SymDimSeq :
+    [scaleName isEqualToString:@"MelMinor"] ? _MelMinorSeq : 0;
 }
 
 - (void) printScale:(NSArray *) scale withName:(NSString *)name {
