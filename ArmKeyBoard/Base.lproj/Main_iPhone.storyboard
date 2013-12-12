@@ -538,12 +538,20 @@
                                     <outlet property="delegate" destination="vXZ-lx-hvc" id="c6r-qh-8FI"/>
                                 </connections>
                             </pickerView>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="ArmKeyBoard" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="W4Z-4Z-f9E">
+                                <rect key="frame" x="31" y="51" width="258" height="52"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" name="Noteworthy-Bold" family="Noteworthy" pointSize="30"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <connections>
                         <outlet property="Picker" destination="mfc-06-J8z" id="e1v-Tb-g2S"/>
                         <outlet property="chooseImage" destination="gdB-3H-Ghh" id="qzC-Yz-3P8"/>
+                        <outlet property="csLabel" destination="W4Z-4Z-f9E" id="00Y-EF-0nt"/>
                         <outlet property="mainImage" destination="ATO-W0-Cj6" id="hrf-jv-5th"/>
                         <outletCollection property="csButtonGrid" destination="mf2-Hb-5Ag" id="Xhp-cR-B96"/>
                         <outletCollection property="csButtonGrid" destination="RKp-OV-mxc" id="JDf-Gm-q3x"/>

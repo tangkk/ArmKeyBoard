@@ -86,6 +86,7 @@ using namespace std;
 @property (strong, nonatomic) NSArray *chordRootArray;
 @property (strong, nonatomic) NSArray *scaleArray;
 @property (strong, nonatomic) NSArray *octaveArray;
+@property (strong, nonatomic) IBOutlet UILabel *csLabel;
 
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
@@ -140,7 +141,7 @@ using namespace std;
     
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
     _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"LydianFlat7", @"Altered", @"SymmetricalDiminished", nil];
-    _octaveArray = [[NSArray alloc] initWithObjects:@"0", @"1", @"2", @"3", @"4", @"5", @"6", @"7", @"8", nil];
+    _octaveArray = [[NSArray alloc] initWithObjects:@"0", @"1", @"2", @"3", @"4", @"5", @"6", @"7", nil];
     _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
     _buttonUnClickedImg = [UIImage imageNamed:@"Chord-Scale"];
     currentCSTag = 0;
@@ -158,6 +159,7 @@ using namespace std;
         octaves.push_back(@"4"); // octave 4 is the default
         octavesInt.push_back(4);
     }
+    [_csLabel setHidden:YES];
 }
 
 - (void) viewWillAppear:(BOOL)animated {
@@ -542,6 +544,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         [button setHidden:YES];
     }
     [_Picker setHidden:YES];
+    [_csLabel setHidden:YES];
     
     // Calculate the total chord-scales (only consecutive chord-scale in the space count)
     totalCS = 0;
@@ -648,6 +651,14 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     NSString *compRoot = [[NSString alloc] initWithFormat:@"%@%@", tonic, oct];
     NSLog(@"compRoot is %@", compRoot);
     int root = [[_Dict.Dict objectForKey:compRoot] intValue];
+    
+    NSString *label = [[NSString alloc] initWithFormat:@"%@%@", compRoot, scaleName];
+    [_csLabel setText:label];
+    [_csLabel setHidden:NO];
+    [self.view bringSubviewToFront:_csLabel];
+    
+    [UIView animateWithDuration:1 animations:^{_csLabel.alpha = 0.5;}];
+    [UIView animateWithDuration:1 animations:^{_csLabel.alpha = 0.0;}];
     
     for (int i = 0; i < mycontours.size(); i++) {
         vector<cv::Point> contour = mycontours[i];
@@ -798,6 +809,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         [button setHidden:NO];
     }
     [_Picker setHidden:NO];
+    [_csLabel setHidden:YES];
 }
 
 - (void)didReceiveMemoryWarning
