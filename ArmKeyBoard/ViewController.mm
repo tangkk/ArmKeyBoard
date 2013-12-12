@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 
+// FIXME: can't build under 64 bit x86_64 architecture because opencv library is not built against this.
 // Import the graphics infrastructure
 #import <MobileCoreServices/UTCoreTypes.h>
 #include <opencv2/core/core.hpp>
@@ -69,6 +70,10 @@ using namespace std;
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *csButtonGrid;
 @property (strong, nonatomic) UIImage *buttonClickedImg;
 @property (strong, nonatomic) UIImage *buttonUnClickedImg;
+@property (strong, nonatomic) UISwipeGestureRecognizer *swipeLeft;
+@property (strong, nonatomic) UISwipeGestureRecognizer *swipeRight;
+@property (strong, nonatomic) UISwipeGestureRecognizer *swipeDown;
+@property (strong, nonatomic) UISwipeGestureRecognizer *swipeUp;
 
 @property (strong, nonatomic) IBOutlet UIPickerView *Picker;
 @property (strong, nonatomic) NSArray *chordRootArray;
@@ -108,12 +113,24 @@ using namespace std;
     // Initialize drawing variables
     brush = 2;
     [self.view addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)]];
+    _swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    _swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    _swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    _swipeUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    [_swipeLeft setDirection:UISwipeGestureRecognizerDirectionLeft];
+    [_swipeRight setDirection:UISwipeGestureRecognizerDirectionRight];
+    [_swipeDown setDirection:UISwipeGestureRecognizerDirectionDown];
+    [_swipeUp setDirection:UISwipeGestureRecognizerDirectionUp];
+    [self.view addGestureRecognizer:_swipeLeft];
+    [self.view addGestureRecognizer:_swipeRight];
+    [self.view addGestureRecognizer:_swipeDown];
+    [self.view addGestureRecognizer:_swipeUp];
     
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
     _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"LydianFlat7", @"Altered", @"SymmetricalDiminished", nil];
     _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
     _buttonUnClickedImg = [UIImage imageNamed:@"Chord-Scale"];
-    currentCSTag = -1;
+    currentCSTag = 0;
     
     // initialize the chordScaleSpace
     pair<NSString *, NSString *> none;
@@ -750,6 +767,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     // Dispose of any resources that can be recreated.
 }
 
+/******chord-scale zone ******/
 #pragma mark - chord-scale zone
 - (IBAction)buttonClicker:(id)sender {
     UIButton *button = (UIButton *)sender;
@@ -817,5 +835,19 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     }
 
 }
+
+/****** swipe gestures for switching between chord-scales******/
+- (void)swipeRecognized:(UISwipeGestureRecognizer *)sender {
+    if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
+        NSLog(@"SwipeRecognized Left");
+    } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
+        NSLog(@"SwipeRecognized Right");
+    } else if (sender.direction == UISwipeGestureRecognizerDirectionDown) {
+        NSLog(@"SwipeRecognized Down");
+    } else if (sender.direction == UISwipeGestureRecognizerDirectionUp) {
+        NSLog(@"SwipeRecognized Up");
+    }
+}
+
 
 @end
