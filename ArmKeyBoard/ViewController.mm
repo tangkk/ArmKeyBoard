@@ -85,12 +85,14 @@ using namespace std;
 @property (strong, nonatomic) UITapGestureRecognizer *doubletap;
 @property (strong, nonatomic) UITapGestureRecognizer *tripletap;
 @property (strong, nonatomic) UITapGestureRecognizer *quadrupletap;
+@property (strong, nonatomic) UILongPressGestureRecognizer *longPress;
 
 @property (strong, nonatomic) IBOutlet UIPickerView *Picker;
 @property (strong, nonatomic) NSArray *chordRootArray;
 @property (strong, nonatomic) NSArray *scaleArray;
 @property (strong, nonatomic) NSArray *octaveArray;
 @property (strong, nonatomic) IBOutlet UILabel *csLabel;
+@property (strong, nonatomic) IBOutlet UIButton *quit;
 
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
@@ -127,7 +129,7 @@ using namespace std;
     brush = 2;
     
     // Initialize view elements
-    [self.view addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)]];
+    _longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)];
     _swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
@@ -136,6 +138,7 @@ using namespace std;
     _doubletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
     _tripletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
     _quadrupletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
+    [_longPress setMinimumPressDuration:2];
     [_swipeLeft setDirection:UISwipeGestureRecognizerDirectionLeft];
     [_swipeRight setDirection:UISwipeGestureRecognizerDirectionRight];
     [_swipeDown setDirection:UISwipeGestureRecognizerDirectionDown];
@@ -151,6 +154,7 @@ using namespace std;
     [self.view addGestureRecognizer:_doubletap];
     [self.view addGestureRecognizer:_tripletap];
     [self.view addGestureRecognizer:_quadrupletap];
+    [self.view addGestureRecognizer:_longPress];
     
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
     _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"Lydianb7", @"Altered", @"SymDim", @"MelMinor", nil];
@@ -173,6 +177,7 @@ using namespace std;
         octavesInt.push_back(4);
     }
     [_csLabel setHidden:YES];
+    [_quit setHidden:YES];
 }
 
 - (void) viewWillAppear:(BOOL)animated {
@@ -571,6 +576,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
     [_Picker setHidden:YES];
     [_csLabel setHidden:YES];
+    [_quit setHidden:YES];
     
     // Calculate the total chord-scales (only consecutive chord-scale in the space count)
     totalCS = 0;
@@ -706,7 +712,6 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         NSLog(@"contmark: %d", contmark);
         NSLog(@"ratio = %f", ratio);
         
-        
         NSArray *scale = [_HS getScale:scaleName];
         if (ratio >= 1) {
             // map notes to regions
@@ -747,7 +752,6 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
 }
 
-// FIXME: This is the fine detail mapping within a given region with a given set of notes: 1. regular mapping, 2. distributed mapping
 static int context2noteNum (int x, int y, float dist, int contourNum, int R, int G, int B, vector<int> &noteset) {
     int numberofNotes = (int) noteset.size();
     // Make sure every note within this region get chance to show up
@@ -797,7 +801,6 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     vector <int> noteset = region2scale[contourNum];
     
     // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space, and generate a note
-    // FIXME: every region should at least produce a note
     if (noteset.size() > 0) {
         cout << "there's a note ! \n";
         noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset);
@@ -810,6 +813,14 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 # pragma mark - refresh image
 // FIXME: when longPressed, don't perform this right away, show a button and let the user choose instead.
 - (void) refreshImage {
+    NSLog(@"longPressed");
+    [self.view bringSubviewToFront:_quit];
+    [_quit setHidden:NO];
+    //_quit.alpha = 0;
+    [UIView animateWithDuration:1 animations:^{_quit.alpha = 1;}];
+}
+
+- (IBAction)quit:(id)sender {
     path = [UIBezierPath bezierPath];
     self.mainImage.image = nil;
     playEnable = NO;
@@ -820,7 +831,11 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     }
     [_Picker setHidden:NO];
     [_csLabel setHidden:YES];
+    [_quit setHidden:YES];
+    currentCS = chordScaleSpace[0];
+    currentOctave = octaves[0];
 }
+
 
 - (void)didReceiveMemoryWarning
 {
@@ -913,6 +928,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 #pragma mark - gestures
 - (void)tapRecognized:(UITapGestureRecognizer *) sender {
+    [UIView animateWithDuration:0.5 animations:^{_quit.alpha = 0;}];
     if (sender.numberOfTouchesRequired == 1) {
         CGPoint lastPoint = [sender locationInView:self.view];
         if (playEnable) {
