@@ -948,73 +948,96 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 /****** Required by Pickerview controller ******/
 // returns the number of 'columns' to display.
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
-    return 3;
+    if (pickerView == _Picker) {
+        return 3;
+    } else {
+        return 1;
+    }
 }
 
 // returns the # of rows in each component..
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
-    if (component == 0) {
-        return [_chordRootArray count];
-    } else if (component == 1) {
-        return [_octaveArray count];
+    if (pickerView == _Picker) {
+        if (component == 0) {
+            return [_chordRootArray count];
+        } else if (component == 1) {
+            return [_octaveArray count];
+        } else {
+            return [_scaleArray count];
+        }
     } else {
-        return [_scaleArray count];
+        return 10;
     }
 }
 
 - (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view {
-    if (component == 0) {
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
+    if (pickerView == _Picker) {
+        if (component == 0) {
+            UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
+            label.backgroundColor = [UIColor blackColor];
+            label.textColor = [UIColor whiteColor];
+            label.textAlignment = NSTextAlignmentCenter;
+            label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
+            label.text = [NSString stringWithFormat:@" %@", [_chordRootArray objectAtIndex:row]];
+            return label;
+        } else if (component == 1) {
+            UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
+            label.backgroundColor = [UIColor blackColor];
+            label.textColor = [UIColor whiteColor];
+            label.textAlignment = NSTextAlignmentCenter;
+            label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
+            label.text = [NSString stringWithFormat:@" %@", [_octaveArray objectAtIndex:row]];
+            return label;
+        }  else {
+            UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
+            label.backgroundColor = [UIColor blackColor];
+            label.textColor = [UIColor whiteColor];
+            label.textAlignment = NSTextAlignmentCenter;
+            label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
+            label.text = [NSString stringWithFormat:@" %@", [_scaleArray objectAtIndex:row]];
+            return label;
+        }
+    } else {
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 10)];
         label.backgroundColor = [UIColor blackColor];
         label.textColor = [UIColor whiteColor];
         label.textAlignment = NSTextAlignmentCenter;
-        label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
+        label.font = [UIFont fontWithName:@"Courier-Bold" size:10];
         label.text = [NSString stringWithFormat:@" %@", [_chordRootArray objectAtIndex:row]];
         return label;
-    } else if (component == 1) {
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
-        label.backgroundColor = [UIColor blackColor];
-        label.textColor = [UIColor whiteColor];
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
-        label.text = [NSString stringWithFormat:@" %@", [_octaveArray objectAtIndex:row]];
-        return label;
-    }  else {
-        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
-        label.backgroundColor = [UIColor blackColor];
-        label.textColor = [UIColor whiteColor];
-        label.textAlignment = NSTextAlignmentCenter;
-        label.font = [UIFont fontWithName:@"Courier-Bold" size:16];
-        label.text = [NSString stringWithFormat:@" %@", [_scaleArray objectAtIndex:row]];
-        return label;
     }
+
 }
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
     // Set the chord-scale of the one chord-scale note via this
-    
-    if (component == 0) {
-        chordScaleSpace[currentCSTag].first =  [_chordRootArray objectAtIndex:row];
-        chordScaleIntSpace[currentCSTag].first = (int)row;
-    } else if (component == 1) {
-        octaves[currentCSTag] = [_octaveArray objectAtIndex:row];
-        octavesInt[currentCSTag] = (int)row;
+    if (pickerView == _Picker) {
+        if (component == 0) {
+            chordScaleSpace[currentCSTag].first =  [_chordRootArray objectAtIndex:row];
+            chordScaleIntSpace[currentCSTag].first = (int)row;
+        } else if (component == 1) {
+            octaves[currentCSTag] = [_octaveArray objectAtIndex:row];
+            octavesInt[currentCSTag] = (int)row;
+        } else {
+            chordScaleSpace[currentCSTag].second = [_scaleArray objectAtIndex:row];
+            chordScaleIntSpace[currentCSTag].second = (int)row;
+        }
+        
+        if (chordScaleIntSpace[currentCSTag].first == 0 || chordScaleIntSpace[currentCSTag].second == 0) {
+            UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:currentCSTag];
+            [button setBackgroundImage:_buttonUnClickedImg forState:UIControlStateNormal];
+        } else {
+            UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:currentCSTag];
+            [button setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
+            button.alpha = 1;
+        }
+        
+        currentCS = chordScaleSpace[0];
+        currentOctave = octaves[0];
     } else {
-        chordScaleSpace[currentCSTag].second = [_scaleArray objectAtIndex:row];
-        chordScaleIntSpace[currentCSTag].second = (int)row;
+        
     }
-    
-    if (chordScaleIntSpace[currentCSTag].first == 0 || chordScaleIntSpace[currentCSTag].second == 0) {
-        UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:currentCSTag];
-        [button setBackgroundImage:_buttonUnClickedImg forState:UIControlStateNormal];
-    } else {
-        UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:currentCSTag];
-        [button setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
-        button.alpha = 1;
-    }
-    
-    currentCS = chordScaleSpace[0];
-    currentOctave = octaves[0];
+
 }
 
 #pragma mark - gestures
@@ -1105,6 +1128,11 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         NSLog(@"currentCSIdx : %d", currentCSIdx);
         [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
     }
+}
+
+#pragma mark - deal with backings dir
+- (void)directoryDidChange:(DirectoryWatcher *)folderWatcher {
+    
 }
 
 
