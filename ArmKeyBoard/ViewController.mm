@@ -77,6 +77,7 @@ using namespace std;
     
     // Gyro readings
     float gravityX, gravityY, gravityZ;
+    bool gravityGuard;
 }
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
@@ -193,6 +194,7 @@ using namespace std;
     
     _motionManager = [[CMMotionManager alloc] init];
     _motionManager.accelerometerUpdateInterval = 0.1;
+    gravityGuard = false;
     if (_motionManager.accelerometerAvailable) {
         _queue = [NSOperationQueue currentQueue];
         [_motionManager startAccelerometerUpdatesToQueue:_queue withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
@@ -201,6 +203,46 @@ using namespace std;
             gravityY = acceleration.y;
             gravityZ = acceleration.z;
             //NSLog(@"x = %f, y = %f, z = %f", gravityX, gravityY, gravityZ);
+            
+            // flip the page if x is larger than a certain number
+            if (!gravityGuard) {
+                if (gravityX > 0.7) {
+                    if (playEnable && totalCS > 0) {
+                        if (currentCSIdx == totalCS - 1) {
+                            currentCSIdx = 0;
+                        } else {
+                            currentCSIdx++;
+                        }
+                        currentCS = chordScaleSpace[currentCSIdx];
+                        currentOctave = octaves[currentCSIdx];
+                        // refresh the chord-scale and the mapping
+                        [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+                        gravityGuard = true;
+                    }
+                } else if (gravityX < -0.7) {
+                    if (playEnable && totalCS > 0) {
+                        if (currentCSIdx == 0) {
+                            currentCSIdx = totalCS - 1;
+                        } else {
+                            currentCSIdx --;
+                        }
+                        currentCS = chordScaleSpace[currentCSIdx];
+                        currentOctave = octaves[currentCSIdx];
+                        // refresh the chord-scale and the mapping
+                        [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+                        gravityGuard = true;
+                    }
+                }
+            }
+            
+            if (gravityX > -0.5 && gravityX < 0.5) {
+                gravityGuard = false;
+            }
+//            
+//            if (gravityZ > 0) {
+//                [self quit:_quit];
+//            }
+            
         }];
     }
     
@@ -1026,7 +1068,6 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
             currentCS = chordScaleSpace[currentCSIdx];
             currentOctave = octaves[currentCSIdx];
             // refresh the chord-scale and the mapping
-            [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
             NSLog(@"SwipeRecognized Left");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
             if (currentCSIdx == totalCS - 1) {
@@ -1037,14 +1078,32 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
             currentCS = chordScaleSpace[currentCSIdx];
             currentOctave = octaves[currentCSIdx];
             // refresh the chord-scale and the mapping
-            [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
             NSLog(@"SwipeRecognized Right");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionDown) {
+            // lower octaves
+            for (int i = 0; i < octaves.size(); i ++) {
+                int oct = octavesInt[i];
+                if (oct > 0) {
+                    oct = -- octavesInt[i];
+                    octaves[i] = [_octaveArray objectAtIndex:oct];
+                }
+            }
+            currentOctave = octaves[currentCSIdx];
             NSLog(@"SwipeRecognized Down");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionUp) {
+            // raise octaves
+            for (int i = 0; i < octaves.size(); i ++) {
+                int oct = octavesInt[i];
+                if (oct < 7) {
+                    oct = ++ octavesInt[i];
+                    octaves[i] = [_octaveArray objectAtIndex:oct];
+                }
+            }
+            currentOctave = octaves[currentCSIdx];
             NSLog(@"SwipeRecognized Up");
         }
         NSLog(@"currentCSIdx : %d", currentCSIdx);
+        [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
     }
 }
 
