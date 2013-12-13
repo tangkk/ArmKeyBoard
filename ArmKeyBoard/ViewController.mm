@@ -27,6 +27,9 @@
 // Import Hierarchical Scale
 #import "HierarchicalScale.h"
 
+// CoreMotion headers
+#import <CoreMotion/CoreMotion.h>
+
 //#define CANNY
 //#define HULL
 //#define TEST
@@ -71,6 +74,9 @@ using namespace std;
     vector<int> octavesInt;
     int totalCS;
     int lastCSTag;
+    
+    // Gyro readings
+    float gravityX, gravityY, gravityZ;
 }
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
@@ -101,6 +107,10 @@ using namespace std;
 
 /* Hierarchical Scale */
 @property (readonly) HierarchicalScale *HS;
+
+/* CoreMotion */
+@property (strong, nonatomic) CMMotionManager *motionManager;
+@property (strong, nonatomic) NSOperationQueue *queue;
 
 @end
 
@@ -180,6 +190,20 @@ using namespace std;
     }
     [_csLabel setHidden:YES];
     [_quit setHidden:YES];
+    
+    _motionManager = [[CMMotionManager alloc] init];
+    _motionManager.accelerometerUpdateInterval = 0.1;
+    if (_motionManager.accelerometerAvailable) {
+        _queue = [NSOperationQueue currentQueue];
+        [_motionManager startAccelerometerUpdatesToQueue:_queue withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
+            CMAcceleration acceleration = accelerometerData.acceleration;
+            gravityX = acceleration.x;
+            gravityY = acceleration.y;
+            gravityZ = acceleration.z;
+            //NSLog(@"x = %f, y = %f, z = %f", gravityX, gravityY, gravityZ);
+        }];
+    }
+    
 }
 
 - (void) viewWillAppear:(BOOL)animated {
@@ -809,7 +833,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     }
     
     // FIXME: change velocity according to accelerometer value
-    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:80 SysEx:0 Root:kMIDINoteOn];
+    int velocity = 127 - MIN(ABS(gravityY * 127), 127);
+    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:velocity SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
 
