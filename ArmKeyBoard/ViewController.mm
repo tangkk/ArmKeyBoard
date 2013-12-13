@@ -9,6 +9,9 @@
 #import "ViewController.h"
 
 // FIXME: can't build under 64 bit x86_64 architecture because opencv library is not built against this.
+// (Opencv2.framework doesn't seem to be supporting iPhone5s(64-bit architecture yet) according to:
+// http://code.opencv.org/projects/opencv/wiki/ChangeLog
+
 // Import the graphics infrastructure
 #import <MobileCoreServices/UTCoreTypes.h>
 #include <opencv2/core/core.hpp>
@@ -370,7 +373,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     // Deal with the outer contour, whose is marked by -1, with only the area score and whose underlying contour is a fake one.
     vector<int> outerscore;
     int outerareascore = outerarea /(distRatio * distRatio);
-    outerscore.push_back(conts.size() - 1);
+    outerscore.push_back((int)conts.size() - 1);
     outerscore.push_back(outerareascore);
     score.push_back(outerscore);
     
@@ -442,13 +445,26 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             deleteHierachyNode(hierarchy, i);
         }
     }
+    
 #pragma mark - outer contours
-    //FIXME: Here I should actually add a outer contour even in the case that no contours are detected, in which case the outer contour should
-    // be the contour of the screen.
     if (mycontours.size()) {
         mycontours.push_back(outercontour);
         contourmark.push_back(-1);
         cout << "******outerArea******\n" << outerarea << "\n";
+    } else {
+        // create an outer contour (the whole screen) when no contour is detected
+        cout << "******create outer contour******\n" ;
+        vector<cv::Point> contour;
+        cv::Point P0(0, 0);
+        cv::Point P1(_mainImage.image.size.width, 0);
+        cv::Point P2(_mainImage.image.size.width, _mainImage.image.size.height);
+        cv::Point P3(0, _mainImage.image.size.height);
+        contour.push_back(P0);
+        contour.push_back(P1);
+        contour.push_back(P2);
+        contour.push_back(P3);
+        mycontours.push_back(contour);
+        contourmark.push_back(-1);
     }
     
     /******Print out the new hierarchy******/
@@ -625,7 +641,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     return [self UIImageFromCVMat:mix];
 }
 
-// FIXME: Apply an intelligent algorithm to 1. map the regions to notes; 2. fine elaborate the very note details according to the very tapping context
+// Apply an intelligent algorithm to 1. map the regions to notes; 2. fine elaborate the very note details according to the very tapping context
 /* Note that this is not a "problem statement" in mathematical sense
  Problem statement 1: Given a set of regions of pixels that together form a large rectangular image,
  find out an optimal scheme to map a certain musical scale(in the form of pitch class) into these pixel regions so that
@@ -697,7 +713,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             int number = floor(ratio);
             vector<int> notes;
             for (int j = mapstart; j < MIN(mapstart + number, scale.count); j++) {
-                notes.push_back([[scale objectAtIndex:j] integerValue] + root);
+                notes.push_back([[scale objectAtIndex:j] intValue] + root);
             }
             // Finally we insert an entry to the map
             region2scale[contmark] = notes;
@@ -705,14 +721,14 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         } else {
             // map regions to notes
             vector<int> notes;
-            notes.push_back([[scale objectAtIndex:MIN(mapstart, scale.count - 1)] integerValue] + root);
+            notes.push_back([[scale objectAtIndex:MIN(mapstart, scale.count - 1)] intValue] + root);
             region2scale[contmark] = notes;
             accum += ratio;
             if (accum >= 1) {
                 accum = 0;
                 mapstart++;
                 if (mapstart >= scale.count) {
-                    mapstart = scale.count - 1;
+                    mapstart = (int) scale.count - 1;
                 }
             }
         }
@@ -733,7 +749,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 
 // FIXME: This is the fine detail mapping within a given region with a given set of notes: 1. regular mapping, 2. distributed mapping
 static int context2noteNum (int x, int y, float dist, int contourNum, int R, int G, int B, vector<int> &noteset) {
-    int numberofNotes = noteset.size();
+    int numberofNotes = (int) noteset.size();
     // Make sure every note within this region get chance to show up
     // A simple but workable approach:
     int noteIdx = ((x + y) % 10 + (R + G + B)) % numberofNotes;
@@ -791,24 +807,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [_VI playMIDI:Note];
 }
 
-#pragma mark - tap gesture
-//- (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-//    UITouch *touch = [touches anyObject];
-//    lastPoint = [touch locationInView:self.view];
-//    if (playEnable) {
-//        [self playAtPosX:lastPoint.x Y:lastPoint.y];
-//    }
-//}
-//
-//- (void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-//
-//}
-//
-//- (void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-//    
-//}
-
 # pragma mark - refresh image
+// FIXME: when longPressed, don't perform this right away, show a button and let the user choose instead.
 - (void) refreshImage {
     path = [UIBezierPath bezierPath];
     self.mainImage.image = nil;
@@ -832,8 +832,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 #pragma mark - chord-scale zone
 - (IBAction)buttonClicker:(id)sender {
     UIButton *button = (UIButton *)sender;
-    int tag = button.tag;
-    currentCSTag = tag;
+    currentCSTag = (int) button.tag;
     
     [_Picker selectRow:chordScaleIntSpace[currentCSTag].first inComponent:0 animated:YES ];
     [_Picker selectRow:octavesInt[currentCSTag] inComponent:1 animated:YES];
@@ -891,13 +890,13 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     
     if (component == 0) {
         chordScaleSpace[currentCSTag].first =  [_chordRootArray objectAtIndex:row];
-        chordScaleIntSpace[currentCSTag].first = row;
+        chordScaleIntSpace[currentCSTag].first = (int)row;
     } else if (component == 1) {
         octaves[currentCSTag] = [_octaveArray objectAtIndex:row];
-        octavesInt[currentCSTag] = row;
+        octavesInt[currentCSTag] = (int)row;
     } else {
         chordScaleSpace[currentCSTag].second = [_scaleArray objectAtIndex:row];
-        chordScaleIntSpace[currentCSTag].second = row;
+        chordScaleIntSpace[currentCSTag].second = (int)row;
     }
     
     if (chordScaleIntSpace[currentCSTag].first == 0 || chordScaleIntSpace[currentCSTag].second == 0) {
@@ -913,7 +912,6 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 }
 
 #pragma mark - gestures
-//FIXME: should support multitouch (polyphonic)
 - (void)tapRecognized:(UITapGestureRecognizer *) sender {
     if (sender.numberOfTouchesRequired == 1) {
         CGPoint lastPoint = [sender locationInView:self.view];
