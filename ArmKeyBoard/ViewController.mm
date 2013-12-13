@@ -70,6 +70,7 @@ using namespace std;
     vector<NSString *> octaves;
     vector<int> octavesInt;
     int totalCS;
+    int lastCSTag;
 }
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
@@ -162,6 +163,7 @@ using namespace std;
     _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
     _buttonUnClickedImg = [UIImage imageNamed:@"Chord-Scale"];
     currentCSTag = 0;
+    lastCSTag = 0;
     currentCSIdx = 0;
     totalCS = 0;
     pair<NSString *, NSString *> none;
@@ -817,7 +819,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [self.view bringSubviewToFront:_quit];
     [_quit setHidden:NO];
     //_quit.alpha = 0;
-    [UIView animateWithDuration:1 animations:^{_quit.alpha = 1;}];
+    [UIView animateWithDuration:1 animations:^{_quit.alpha = 0.5;}];
 }
 
 - (IBAction)quit:(id)sender {
@@ -834,6 +836,10 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [_quit setHidden:YES];
     currentCS = chordScaleSpace[0];
     currentOctave = octaves[0];
+    currentCSTag = 0;
+    lastCSTag = 0;
+    currentCSIdx = 0;
+    totalCS = 0;
 }
 
 
@@ -853,6 +859,23 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [_Picker selectRow:octavesInt[currentCSTag] inComponent:1 animated:YES];
     [_Picker selectRow:chordScaleIntSpace[currentCSTag].second inComponent:2 animated:YES ];
     
+    // set this button's appearance
+    [button setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
+    button.alpha = 0.5;
+    
+    // reset last button's appearance
+    if (currentCSTag != lastCSTag) {
+        if (chordScaleIntSpace[lastCSTag].first == 0 || chordScaleIntSpace[lastCSTag].second == 0) {
+            UIButton *lastbutton = (UIButton *)[_csButtonGrid objectAtIndex:lastCSTag];
+            [lastbutton setBackgroundImage:_buttonUnClickedImg forState:UIControlStateNormal];
+            lastbutton.alpha = 1;
+        } else {
+            UIButton *lastbutton = (UIButton *)[_csButtonGrid objectAtIndex:lastCSTag];
+            [lastbutton setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
+            lastbutton.alpha = 1;
+        }
+    }
+    lastCSTag = currentCSTag;
 }
 
 /****** Required by Pickerview controller ******/
@@ -920,6 +943,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     } else {
         UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:currentCSTag];
         [button setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
+        button.alpha = 1;
     }
     
     currentCS = chordScaleSpace[0];
