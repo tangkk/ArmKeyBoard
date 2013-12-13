@@ -171,12 +171,12 @@ using namespace std;
     none = make_pair(@"None", @"None");
     noneInt = make_pair(0, 0);
     currentCS = none;
-    currentOctave = @"4";
+    currentOctave = @"3";
     for (int i = 0; i < _csButtonGrid.count; i++) {
         chordScaleSpace.push_back(none);
         chordScaleIntSpace.push_back(noneInt);
-        octaves.push_back(@"4"); // octave 4 is the default
-        octavesInt.push_back(4);
+        octaves.push_back(@"3"); // octave 3 is the default
+        octavesInt.push_back(3);
     }
     [_csLabel setHidden:YES];
     [_quit setHidden:YES];
@@ -184,7 +184,7 @@ using namespace std;
 
 - (void) viewWillAppear:(BOOL)animated {
     [_Picker selectRow:0 inComponent:0 animated:YES ];
-    [_Picker selectRow:4 inComponent:1 animated:YES];
+    [_Picker selectRow:3 inComponent:1 animated:YES];
     [_Picker selectRow:0 inComponent:2 animated:YES ];
 }
 
@@ -808,12 +808,12 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset);
     }
     
-    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:100 SysEx:0 Root:kMIDINoteOn];
+    // FIXME: change velocity according to accelerometer value
+    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:80 SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
 
 # pragma mark - refresh image
-// FIXME: when longPressed, don't perform this right away, show a button and let the user choose instead.
 - (void) refreshImage {
     NSLog(@"longPressed");
     [self.view bringSubviewToFront:_quit];
