@@ -73,7 +73,7 @@ using namespace std;
     float gravityX, gravityY, gravityZ;
     bool gravityGuard;
 }
-
+/* Gesture things and views*/
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
 @property (strong, nonatomic) IBOutlet UIButton *chooseImage;
 @property (strong, nonatomic) IBOutlet UIButton *quit;
@@ -90,6 +90,7 @@ using namespace std;
 @property (strong, nonatomic) UITapGestureRecognizer *quadrupletap;
 @property (strong, nonatomic) UILongPressGestureRecognizer *longPress;
 
+/* chord-scale things */
 @property (strong, nonatomic) IBOutlet UIPickerView *csPicker;
 @property (strong, nonatomic) IBOutlet UILabel *csLabel;
 @property (strong, nonatomic) NSArray *chordRootArray;
@@ -116,7 +117,6 @@ using namespace std;
 {
     [super viewDidLoad];
     
-
     [self opencvVarInit];
     [self musInfrastructureSetup];
     [self gesturesSetup];
@@ -237,7 +237,7 @@ using namespace std;
                         currentOctave = octaves[currentCSIdx];
                         
                         // refresh the chord-scale and the mapping
-                        [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+                        [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
                         gravityGuard = true;
                     }
                 } else if (gravityX < -0.7) {
@@ -249,7 +249,7 @@ using namespace std;
                         }
                         currentCS = chordScaleSpace[currentCSIdx];
                         currentOctave = octaves[currentCSIdx];
-                        [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+                        [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
                         gravityGuard = true;
                     }
                 }
@@ -406,7 +406,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 }
 
 // Once we got the hierarchy, we need to calculate the score of each note based on 1. degree; 2. area; 3. central location
-// Calculate and then sort. The sorted order is descending.
+// Calculate and then sort. The sorted order is descending order.
 - (void) sortContours: (vector<vector<cv::Point> > &)conts withMarks: (vector<int> &) marks{
     // create a 2d vector - [contour index, overall score]
     vector<vector<int> > score;
@@ -456,7 +456,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         score.push_back(indscore);
     }
     
-    // Deal with the outer contour, whose is marked by -1, with only the area score and whose underlying contour is a fake one.
+    // deal with the outer contour, which is marked by -1, with only the area score and whose underlying contour is a fake one.
     vector<int> outerscore;
     int outerareascore = outerarea /(distRatio * distRatio);
     outerscore.push_back((int)conts.size() - 1);
@@ -509,7 +509,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 #endif
 
 // ******delete some small contours and the corresponding hierarchy nodes.******//
-    /******Print out the hierarchy******/
+    /******Print out the old hierarchy******/
     DSLog(@"******Hierarchy******") ;
 #ifdef TEST
     for (vector<cv::Vec4i>::iterator ih = hierarchy.begin(), eh = hierarchy.end(); ih != eh ; ++ih ) {
@@ -517,7 +517,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
 #endif
     
-    int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2, so that this area is correspond to the real image
+    int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2, so that this area corresponds to the real image
     mycontours.clear();
     contourmark.clear();
     outerarea = imagesize;
@@ -528,21 +528,20 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             mycontours.push_back(contours[i]);
             contourmark.push_back(i);
             outerarea -= area;
-            outercontour = contours[i]; // This is a fake contour
+            outercontour = contours[i]; // This is a fake contour for the outer
         }
         else {
+            /* This is an algorithm to delete nodes in the hierarchy */
             deleteHierachyNode(hierarchy, i);
         }
     }
     
-// ******outer contours ******//
+// ******outer contours - create an outer contour (the whole screen) when no contour is detected ******//
     if (mycontours.size()) {
         mycontours.push_back(outercontour);
         contourmark.push_back(-1);
-        DSLog(@"******outerArea******");
     } else {
-        // create an outer contour (the whole screen) when no contour is detected
-        DSLog(@"******create outer contour******") ;
+        DSLog(@"******create outer contour******");
         vector<cv::Point> contour;
         cv::Point P0(0, 0);
         cv::Point P1(_mainImage.image.size.width, 0);
@@ -600,7 +599,6 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         cv::drawContours( drawing, mycontours, (int)i, color, 2, 8, vector<cv::Vec4i>(), 0, cv::Point() );
     }
     
-    
     /*************************Mix the source and the drawings********************************/
     double alpha, beta;
     alpha = 0.5;
@@ -650,7 +648,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     [_csLabel setHidden:YES];
     [_quit setHidden:YES];
     
-    // Calculate the total chord-scales (only consecutive chord-scale in the space count)
+    // Calculate the total chord-scales (only consecutive chord-scale in the space counts)
     playEnable = YES;
     totalCS = 0;
     for (int i = 0; i < chordScaleIntSpace.size(); i++) {
@@ -692,9 +690,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         [self.view bringSubviewToFront:_mainImage];
         
         // Perform the algorithm on to the contours to produce the region-scale mapping
-        [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+        [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
     }
-    
     [picker dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -725,14 +722,12 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
  9. The root of a spanning tree of a graph can be associated with the most connected region in the image
  10. The root of a spanning tree of a graph can also be associated with the largest region in the image
  */
-/* The algorithm:
- */
 /* Evaluation:
  use WIJAM as a platform, auto master config, play a couple of songs with this keyboard and with the old one,
  record them and let real people to evaluate the musicality of the songs
  */
 /*Note that when this function is called the mycontours and contourmark are already sorted in descending order. The outer contour is also included*/
-- (void) region2hs:(NSString *) scaleName withTonic:(NSString *)tonic withOctave:(NSString *)oct{
+- (void) regionToHierarchicalScale:(NSString *) scaleName withTonic:(NSString *)tonic withOctave:(NSString *)oct {
     int mapstart = 0;
     float accum = 0;
     region2scale.clear();
@@ -763,7 +758,6 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         } else {
             ratio = contourarea / RPN15;
         }
-        
         int contmark = contourmark[i];
         DSLog(@"contmark: %d", contmark);
         DSLog(@"ratio = %f", ratio);
@@ -872,6 +866,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 }
 
 # pragma mark - quit zone
+
 - (void) refreshImage {
     [self.view bringSubviewToFront:_quit];
     [_quit setHidden:NO];
@@ -902,6 +897,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 /******chord-scale zone ******/
 #pragma mark - chord-scale zone
+
 - (IBAction)buttonClicker:(id)sender {
     UIButton *button = (UIButton *)sender;
     currentCSTag = (int) button.tag;
@@ -990,7 +986,6 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         label.text = [NSString stringWithFormat:@" %@", [_chordRootArray objectAtIndex:row]];
         return label;
     }
-
 }
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
@@ -1019,7 +1014,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         currentCS = chordScaleSpace[0];
         currentOctave = octaves[0];
     } else {
-        
+        /* do something if there's another picker view*/
     }
 
 }
@@ -1128,7 +1123,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         }
     }
      currentOctave = octaves[currentCSIdx];
-    [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+    [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
 }
 
 #pragma mark - backing zone
