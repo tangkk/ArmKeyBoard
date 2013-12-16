@@ -12,6 +12,8 @@
 // (Opencv2.framework doesn't seem to be supporting iPhone5s(64-bit architecture yet) according to:
 // http://code.opencv.org/projects/opencv/wiki/ChangeLog
 
+#import "Definition.h"
+
 // Import the graphics infrastructure
 #import <MobileCoreServices/UTCoreTypes.h>
 #include <opencv2/core/core.hpp>
@@ -30,28 +32,17 @@
 // CoreMotion headers
 #import <CoreMotion/CoreMotion.h>
 
+// Opencv configuration
 //#define CANNY
-//#define HULL
-//#define TEST
 
 using namespace std;
 
 @interface ViewController () {
-    // Drawing Elements
-    UIBezierPath *path;
-    CGFloat brush;
-    
-    // threshold
     int thresh ;
-    int max_thresh;
-    // minimum area of a contour
     int contourmin;
-    int max_contourmin;
-    // The contours and hulls
     vector<vector<cv::Point> > mycontours;
-    vector<vector<cv::Point> > myhulls;
-    vector<int> contourmark; // This is to mark the original contour number to the mycontour number
-    double outerarea; // The imagesize excluding all the counted contour areas
+    vector<int> contourmark;        // This is to mark the original contour number to the mycontour number
+    double outerarea;               // The imagesize excluding all the counted contour areas
     vector<cv::Vec4i> hierarchy;
     map<int, vector<int> > region2scale;
     cv::Mat srcMat;
@@ -62,8 +53,9 @@ using namespace std;
     float heightRatio;
     float distRatio;
     double imagesize, screensize;
-    double RPN15, RPN17; // region per note for 15 note scale or 17 note scale
+    double RPN15, RPN17;                    // region per note for 15 note scale or 17 note scale
     
+    // chord-scale things
     int currentCSTag;
     int currentCSIdx;
     int currentInstIdx;
@@ -77,7 +69,7 @@ using namespace std;
     int totalCS;
     int lastCSTag;
     
-    // Gyro readings
+    // gravity readings
     float gravityX, gravityY, gravityZ;
     bool gravityGuard;
 }
@@ -97,7 +89,7 @@ using namespace std;
 @property (strong, nonatomic) UITapGestureRecognizer *quadrupletap;
 @property (strong, nonatomic) UILongPressGestureRecognizer *longPress;
 
-@property (strong, nonatomic) IBOutlet UIPickerView *Picker;
+@property (strong, nonatomic) IBOutlet UIPickerView *csPicker;
 @property (strong, nonatomic) NSArray *chordRootArray;
 @property (strong, nonatomic) NSArray *scaleArray;
 @property (strong, nonatomic) NSArray *octaveArray;
@@ -107,7 +99,7 @@ using namespace std;
 
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
-@property (readonly) NoteNumDict *Dict;
+@property (readonly) NoteNumDict *dict;
 
 /* Hierarchical Scale */
 @property (readonly) HierarchicalScale *HS;
@@ -123,27 +115,36 @@ using namespace std;
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
     
-    // Initialize musical infrastructures
-    [self musInfrastructureSetup];
-    
-    // Initialize opencv variables
     thresh = 100;
-    max_thresh = 255;
     contourmin = 100;
-    max_contourmin = 2000;
-    
     widthRatio = 1;
     heightRatio = 1;
     distRatio = 1;
-    
     playEnable = NO;
     
-    // Initialize drawing variables
-    brush = 2;
+    [self musInfrastructureSetup];
+    [self gesturesSetup];
+    [self chordScaleGridSetup];
+    [self coreMotionSetup];
     
-    // Initialize view elements
+}
+
+- (void) viewWillAppear:(BOOL)animated {
+    [_csPicker selectRow:0 inComponent:0 animated:YES ];
+    [_csPicker selectRow:3 inComponent:1 animated:YES];
+    [_csPicker selectRow:0 inComponent:2 animated:YES ];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - setup zone
+
+- (void) gesturesSetup {
     _longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)];
     _swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
@@ -170,9 +171,12 @@ using namespace std;
     [self.view addGestureRecognizer:_tripletap];
     [self.view addGestureRecognizer:_quadrupletap];
     [self.view addGestureRecognizer:_longPress];
-    
+}
+
+- (void) chordScaleGridSetup {
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
-    _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"Lydianb7", @"Altered", @"SymDim", @"MelMinor", nil];
+    _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian",
+                   @"Locrian", @"Lydianb7", @"Altered", @"SymDim", @"MelMinor", nil];
     _octaveArray = [[NSArray alloc] initWithObjects:@"0", @"1", @"2", @"3", @"4", @"5", @"6", @"7", nil];
     _instrumentArray = [[NSArray alloc] initWithObjects:@Piano, @SteelGuitar, /*@Guitar, @Trombone, */@Vibraphone, nil];
     _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
@@ -192,12 +196,14 @@ using namespace std;
     for (int i = 0; i < _csButtonGrid.count; i++) {
         chordScaleSpace.push_back(none);
         chordScaleIntSpace.push_back(noneInt);
-        octaves.push_back(@"3"); // octave 3 is the default
+        octaves.push_back(@"3"); // octave 3 is by default
         octavesInt.push_back(3);
     }
     [_csLabel setHidden:YES];
     [_quit setHidden:YES];
-    
+}
+
+- (void) coreMotionSetup {
     _motionManager = [[CMMotionManager alloc] init];
     _motionManager.accelerometerUpdateInterval = 0.1;
     gravityGuard = false;
@@ -208,9 +214,8 @@ using namespace std;
             gravityX = acceleration.x;
             gravityY = acceleration.y;
             gravityZ = acceleration.z;
-            //NSLog(@"x = %f, y = %f, z = %f", gravityX, gravityY, gravityZ);
             
-            // flip the page if x is larger than a certain number
+            // flip the page if abs x is larger than a certain number
             if (!gravityGuard) {
                 if (gravityX > 0.7) {
                     if (playEnable && totalCS > 0) {
@@ -221,6 +226,7 @@ using namespace std;
                         }
                         currentCS = chordScaleSpace[currentCSIdx];
                         currentOctave = octaves[currentCSIdx];
+                        
                         // refresh the chord-scale and the mapping
                         [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
                         gravityGuard = true;
@@ -234,7 +240,6 @@ using namespace std;
                         }
                         currentCS = chordScaleSpace[currentCSIdx];
                         currentOctave = octaves[currentCSIdx];
-                        // refresh the chord-scale and the mapping
                         [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
                         gravityGuard = true;
                     }
@@ -244,34 +249,23 @@ using namespace std;
             if (gravityX > -0.5 && gravityX < 0.5) {
                 gravityGuard = false;
             }
-//            
-//            if (gravityZ > 0) {
-//                [self quit:_quit];
-//            }
-            
         }];
     }
-    
-}
-
-- (void) viewWillAppear:(BOOL)animated {
-    [_Picker selectRow:0 inComponent:0 animated:YES ];
-    [_Picker selectRow:3 inComponent:1 animated:YES];
-    [_Picker selectRow:0 inComponent:2 animated:YES ];
 }
 
 - (void) musInfrastructureSetup {
     if (_VI == nil) {
         _VI = [[VirtualInstrument alloc] init];
-        [_VI setInstrument:@"Trombone" withInstrumentID:Trombone];
+        //[_VI setInstrument:@"Trombone" withInstrumentID:Trombone];
         [_VI setInstrument:@"SteelGuitar" withInstrumentID:SteelGuitar];
+        // FIXME: don't know why the "Guitar" does not work
         //[_VI setInstrument:@"Guitar" withInstrumentID:Guitar];
         [_VI setInstrument:@"Piano" withInstrumentID:Piano];
         [_VI setInstrument:@"Vibraphone" withInstrumentID:Vibraphone];
     }
     
-    if (_Dict == nil) {
-        _Dict = [[NoteNumDict alloc] init];
+    if (_dict == nil) {
+        _dict = [[NoteNumDict alloc] init];
     }
     
     if (_HS == nil) {
@@ -279,6 +273,8 @@ using namespace std;
     }
     
 }
+
+#pragma mark - opencv zone
 
 - (cv::Mat)cvMatFromUIImage:(UIImage *)image
 {
@@ -345,7 +341,6 @@ using namespace std;
 //                  [0      , 1            , 2               , 3         ]
 // structure: [Next, Previous, First_Child, Parent]
 static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
-    cout << hier[nodeNum] << "\n";
     int next = hier[nodeNum][0];
     int prev = hier[nodeNum][1];
     int firstChild = hier[nodeNum][2];
@@ -398,7 +393,6 @@ static void deleteHierachyNode( vector<cv::Vec4i> &hier, int nodeNum) {
 
 // Compare the second element of the input vectors. It's to be used by the sort function.
 static bool vectorCompare (vector<int>A, vector<int> B) {
-    //cout << "A[1] = " << A[1] << "," << "B[1] = " << B[1] << "\n";
     return A[1] > B[1];
 }
 
@@ -409,11 +403,11 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     vector<vector<int> > score;
     CGPoint center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
     
-    cout << "sortContours...\n";
+    DSLog(@"sortContours...");
     for (int i = 0; i < conts.size() - 1; i++) { // The last contour is a null for outercontour
         vector<cv::Point> cont = conts[i];
         int nodeNum = marks[i];
-        cout << "******contour number****** ----> " << nodeNum << "\n";
+        DSLog(@"******contour number****** ----> , %d", nodeNum);
         
         // Calculate the degree score = # of parent node + child nodes
         int degreescore = 0;
@@ -439,11 +433,11 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         float dist = sqrt((mc.x - center.x)*(mc.x - center.x) + (mc.y - center.y)*(mc.y - center.y));
         locationscore = dist;
         
-        cout << "center point --> " << center.x << "," << center.y << "\n";
-        cout << "mc point --> " << mc.x << "," << mc.y << "\n";
-        cout << "degreescore = " << degreescore << "\n";
-        cout << "areascore = " << areascore << "\n";
-        cout << "locationscore = " << locationscore << "\n";
+        DSLog(@"center point --> , %f, %f", center.x, center.y);
+        DSLog(@"mc point --> , %f, %f", mc.x, mc.y );
+        DSLog(@"degreescore = %d", degreescore);
+        DSLog(@"areascore = %f", areascore) ;
+        DSLog(@"locationscore = %f", locationscore);
         
         int overallscore = degreescore + areascore + locationscore;
         // indScore -- [contour index, overallscore]
@@ -460,16 +454,16 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     outerscore.push_back(outerareascore);
     score.push_back(outerscore);
     
-    cout << "******original score vectors****** \n";
+    DSLog(@"******original score vectors******");
     for (vector<vector<int> >::iterator i = score.begin(), e = score.end(); i != e; ++i) {
-        cout << (*i)[0] << "," << (*i)[1] << "\n";
+        DSLog(@"%d, %d", (*i)[0], (*i)[1]);
     }
     
     sort(score.begin(), score.end(), vectorCompare);
     
-    cout << "******sorted score vectors****** \n";
+    DSLog(@"******sorted score vectors******");
     for (vector<vector<int> >::iterator i = score.begin(), e = score.end(); i != e; ++i) {
-        cout << (*i)[0] << "," << (*i)[1] << "\n";
+        DSLog(@"%d, %d", (*i)[0], (*i)[1]);
     }
     
     // rearrange the mycontours and contourmark according to the sorted list
@@ -485,6 +479,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     
 }
 
+/******The main opencv job is done here in this function******/
 -(void) doContourOperationTarget: (cv::Mat &)targtImg  Src:(cv::Mat &)srcImg Mix:(cv::Mat &)mixImg{
     cv::Mat threshold_output;
     cv::Mat canny_output;
@@ -504,18 +499,20 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     findContours( threshold_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 #endif
 
-#pragma mark - delete some small contours and the corresponding hierarchy nodes.
+// ******delete some small contours and the corresponding hierarchy nodes.******//
     /******Print out the hierarchy******/
-    cout << "******Hierarchy******\n";
+    DSLog(@"******Hierarchy******") ;
+#ifdef TEST
     for (vector<cv::Vec4i>::iterator ih = hierarchy.begin(), eh = hierarchy.end(); ih != eh ; ++ih ) {
         cout << *ih << "\n";
     }
+#endif
     
     int contourminScaled = contourmin*distRatio*distRatio; // scaled by the distRatio^2, so that this area is correspond to the real image
     mycontours.clear();
     contourmark.clear();
     outerarea = imagesize;
-    cout << "******Nodes to be deleted" << "\n";
+    DSLog(@"******Nodes to be deleted" );
     for( int i = 0; i< contours.size(); i++) {
         double area = contourArea(contours[i]);
         if (area > contourminScaled) {
@@ -529,14 +526,14 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         }
     }
     
-#pragma mark - outer contours
+// ******outer contours ******//
     if (mycontours.size()) {
         mycontours.push_back(outercontour);
         contourmark.push_back(-1);
-        cout << "******outerArea******\n" << outerarea << "\n";
+        DSLog(@"******outerArea******");
     } else {
         // create an outer contour (the whole screen) when no contour is detected
-        cout << "******create outer contour******\n" ;
+        DSLog(@"******create outer contour******") ;
         vector<cv::Point> contour;
         cv::Point P0(0, 0);
         cv::Point P1(_mainImage.image.size.width, 0);
@@ -551,27 +548,29 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
     
     /******Print out the new hierarchy******/
-    cout << "******New Hierarchy******\n";
+    DSLog(@"******New Hierarchy******");
+#ifdef TEST
     for (vector<cv::Vec4i>::iterator ih = hierarchy.begin(), eh = hierarchy.end(); ih != eh ; ++ih ) {
         cout << *ih << "\n";
     }
+#endif
     
-#pragma mark - sort contours
-    cout << "******original contourmark****** \n";
+// ****** sort contours ******//
+    DSLog(@"******original contourmark******") ;
     for (vector<int>::iterator i = contourmark.begin(), e = contourmark.end(); i != e; ++i) {
-        cout << (*i) << "\n";
+        DSLog(@"%d", (*i));
     }
     
     if (mycontours.size()) {
         [self sortContours:mycontours withMarks:contourmark];
     }
     
-    cout << "******sorted contourmark****** \n";
+    DSLog(@"******sorted contourmark******") ;
     for (vector<int>::iterator i = contourmark.begin(), e = contourmark.end(); i != e; ++i) {
-        cout << (*i) << "\n";
+        DSLog(@"%d", (*i));
     }
     
-#pragma mark - draw contours
+// ******draw contours ******//
     cv::RNG rng(12345);
     cv::Mat drawing;
 #ifdef CANNY
@@ -580,27 +579,6 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     drawing = cv::Mat::zeros( threshold_output.size(), CV_8UC4 );
 #endif
     
-#ifdef HULL
-    /*************************Find the convex hull object for each contour********************************/
-    myhulls.clear();
-    vector<vector<cv::Point> >hull( mycontours.size());
-    for( size_t i = 0; i < mycontours.size(); i++ ) {
-        cv::convexHull( cv::Mat(mycontours[i]), hull[i], false );
-        myhulls.push_back(hull[i]);
-    }
-    
-    for( size_t i = 0; i< myhulls.size(); i++ )
-    {
-        cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-        cv::drawContours( drawing, myhulls, (int)i, color, 2, 8, vector<cv::Vec4i>(), 0, cv::Point() );
-    }
-    
-    for( size_t i = 0; i< myhulls.size(); i++ )
-    {
-        cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255)  );
-        cv::drawContours( drawing, myhulls, (int)i, color, 2, 8, vector<cv::Vec4i>(), 0, cv::Point() );
-    }
-#else
     for( size_t i = 0; i< mycontours.size(); i++ )
     {
         cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
@@ -612,7 +590,6 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255)  );
         cv::drawContours( drawing, mycontours, (int)i, color, 2, 8, vector<cv::Vec4i>(), 0, cv::Point() );
     }
-#endif
     
     
     /*************************Mix the source and the drawings********************************/
@@ -620,10 +597,20 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     alpha = 0.5;
     beta = 1 - alpha;
     cv::addWeighted(srcImg, alpha, drawing, beta, 0, mixImg);
-    
 }
 
-// Photo Picking methods
+- (UIImage *) opencvImageProcessing:(UIImage *) SrcImg {
+    srcMat = [self cvMatFromUIImage:SrcImg];
+    cv::Mat src_gray;
+    cv::Mat mix;
+    
+    cv::cvtColor( srcMat, src_gray, cv::COLOR_BGR2GRAY );
+    cv::blur( src_gray, src_gray, cv::Size(3,3) );
+    [self doContourOperationTarget:src_gray Src:srcMat Mix:mix];
+    return [self UIImageFromCVMat:mix];
+}
+
+#pragma mark - photo picking zone
 - (BOOL) startMediaBrowserFromViewController: (UIViewController *)controller
                                usingDelegate:(id <UIImagePickerControllerDelegate, UINavigationControllerDelegate>) delegate {
     
@@ -645,18 +632,17 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 }
 
 - (IBAction)showImageBrowser:(id)sender {
-    NSLog(@"Action Called");
-    playEnable = YES;
     [_chooseImage setHidden:YES];
     for (int i = 0 ; i < _csButtonGrid.count; i++) {
         UIButton *button = [_csButtonGrid objectAtIndex:i];
         [button setHidden:YES];
     }
-    [_Picker setHidden:YES];
+    [_csPicker setHidden:YES];
     [_csLabel setHidden:YES];
     [_quit setHidden:YES];
     
     // Calculate the total chord-scales (only consecutive chord-scale in the space count)
+    playEnable = YES;
     totalCS = 0;
     for (int i = 0; i < chordScaleIntSpace.size(); i++) {
         if (chordScaleIntSpace[i].first && chordScaleIntSpace[i].second) {
@@ -665,15 +651,13 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             break;
         }
     }
-    NSLog(@"totalCS: %d", totalCS);
+    DSLog(@"totalCS: %d", totalCS);
     
     [self startMediaBrowserFromViewController:self usingDelegate:self];
 }
 
-// Delegate method for the pick controller media browser
+/****** delegate for the pick controller media browser ******/
 - (void) imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
-    NSLog(@"imagePickerController called!");
-    
     NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
     UIImage *selectedImage;
     
@@ -682,23 +666,20 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         selectedImage = (UIImage *) [info objectForKey:UIImagePickerControllerOriginalImage];
         // Set the display content mode
         _mainImage.contentMode = UIViewContentModeScaleAspectFit;
-        //_mainImage.contentMode = UIViewContentModeScaleAspectFill;
         
         imagesize = selectedImage.size.width * selectedImage.size.height;
         screensize = self.view.frame.size.width * self.view.frame.size.height;
         RPN15 = imagesize / 15;
         RPN17 = imagesize / 17;
-        cout << "image size x = " << selectedImage.size.width << " y= " << selectedImage.size.height << "size = " << imagesize << "\n";
-        cout << "screen size x = " << self.view.frame.size.width << " y=" << self.view.frame.size.height << "size = " << screensize <<"\n";
         widthRatio = selectedImage.size.width / self.view.frame.size.width;
         heightRatio = selectedImage.size.height / self.view.frame.size.height;
         distRatio = sqrt(widthRatio*widthRatio + heightRatio*heightRatio);
-        cout << "widthRatio = " << widthRatio  << "\n";
-        cout << "heightRatio = " << heightRatio << "\n";
-        cout << "distRatio = " << distRatio << "\n";
+        DSLog(@"image size x = %f, y = %f, size = %f", selectedImage.size.width, selectedImage.size.height, imagesize);
+        DSLog(@"screen size x = %f, y = %f, size = %f", self.view.frame.size.width, self.view.frame.size.height, screensize);
+        DSLog(@"widthRatio = %f, heightRation = %f, distRation = %f", widthRatio, heightRatio, distRatio);
         
-        // Do Image processing using opencv here;
-        _mainImage.image = [self ConvexHullProcessSrcImage:selectedImage];
+        // Do Image processing using opencv
+        _mainImage.image = [self opencvImageProcessing:selectedImage];
         [self.view bringSubviewToFront:_mainImage];
         
         // Perform the algorithm on to the contours to produce the region-scale mapping
@@ -709,20 +690,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
-    NSLog(@"imagePickerControllerDidCancel called!");
-    [self refreshImage];
+    [self quit:_quit];
     [picker dismissViewControllerAnimated:YES completion:nil];
-}
-
-- (UIImage *) ConvexHullProcessSrcImage:(UIImage *) SrcImg {
-    srcMat = [self cvMatFromUIImage:SrcImg];
-    cv::Mat src_gray;
-    cv::Mat mix;
-    
-    cv::cvtColor( srcMat, src_gray, cv::COLOR_BGR2GRAY );
-    cv::blur( src_gray, src_gray, cv::Size(3,3) );
-    [self doContourOperationTarget:src_gray Src:srcMat Mix:mix];
-    return [self UIImageFromCVMat:mix];
 }
 
 // Apply an intelligent algorithm to 1. map the regions to notes; 2. fine elaborate the very note details according to the very tapping context
@@ -753,16 +722,16 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
  use WIJAM as a platform, auto master config, play a couple of songs with this keyboard and with the old one,
  record them and let real people to evaluate the musicality of the songs
  */
+/*Note that when this function is called the mycontours and contourmark are already sorted in descending order. The outer contour is also included*/
 - (void) region2hs:(NSString *) scaleName withTonic:(NSString *)tonic withOctave:(NSString *)oct{
-    // Note that when this function is called the mycontours and contourmark are already sorted in descending order. The outer contour is also included.
     int mapstart = 0;
     float accum = 0;
     region2scale.clear();
     NSString *compRoot = [[NSString alloc] initWithFormat:@"%@%@", tonic, oct];
-    NSLog(@"compRoot is %@", compRoot);
-    int root = [[_Dict.Dict objectForKey:compRoot] intValue];
+    DSLog(@"compRoot is %@", compRoot);
+    int root = [_dict getNumforNote:compRoot];
     
-    NSString *label = [[NSString alloc] initWithFormat:@"%@%@", compRoot, scaleName];
+    NSString *label = [[NSString alloc] initWithFormat:@"%@ %@", compRoot, scaleName];
     [_csLabel setText:label];
     [_csLabel setHidden:NO];
     [self.view bringSubviewToFront:_csLabel];
@@ -787,8 +756,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         }
         
         int contmark = contourmark[i];
-        NSLog(@"contmark: %d", contmark);
-        NSLog(@"ratio = %f", ratio);
+        DSLog(@"contmark: %d", contmark);
+        DSLog(@"ratio = %f", ratio);
         
         NSArray *scale = [_HS getScale:scaleName];
         if (ratio >= 1) {
@@ -816,18 +785,19 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             }
         }
     }
-    
-    // print out the regsion2scale map
+#ifdef TEST
+     // print out the regsion2scale map
     for (map<int, vector<int> >::iterator I = region2scale.begin(), E = region2scale.end(); I != E; ++I) {
         int key = (*I).first;
         vector<int> value = (*I).second;
-        NSLog(@"key = %d", key);
-        cout << "Value = ";
+        DSLog(@"key = %d", key);
+        DSLog(@"Value = ");
         for (vector<int>::iterator IV = value.begin(), EV = value.end(); IV != EV; ++IV) {
             cout << (*IV) << ",";
         }
         cout << "\n";
     }
+#endif
 }
 
 static int context2noteNum (int x, int y, float dist, int contourNum, int R, int G, int B, vector<int> &noteset) {
@@ -839,7 +809,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     return noteset[noteIdx];
 }
 
-#pragma mark - play action
+#pragma mark - play zone
 
 - (void) playAtPosX:(int)x Y:(int)y {
     bool isInside = false;
@@ -860,29 +830,31 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         Red = srcMat.at<cv::Vec4b>(scaleX, scaleY)[0];
         Green = srcMat.at<cv::Vec4b>(scaleX, scaleY)[1];
         Blue = srcMat.at<cv::Vec4b>(scaleX, scaleY)[2];
-        cout << "RGB = " << Red << "," << Green << "," << Blue << "\n";
+        DSLog(@"RGB = %d, %d, %d", Red , Green, Blue);
     }
     
+    // FIXME: how to make good use the dist information?
+    dist = 0;
     //  Calculate the distance and scale it down the dist to the screen space, take the innermost contour's noteset.
-    for (int i = 0; i < mycontours.size(); i++) {
-        dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
-        if(dist > 0) {
-            dist /= distRatio;
-            cout << "The current pos is in contour " << contourmark[i] << " with distance " << dist << "\n";
-            isInside = true;
-            contourNum = contourmark[i];
-        }
-    }
-    if (!isInside) {
-        cout << "The current pos is in contour -1" << "\n";
+//    for (int i = 0; i < mycontours.size(); i++) {
+//        dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
+//        if(dist > 0) {
+//            dist /= distRatio;
+//            DSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
+//            isInside = true;
+//            contourNum = contourmark[i];
+//        }
+//    }
+    
+    if (! isInside) {
+        DSLog(@"The current pos is in contour -1");
         contourNum = -1;
     }
-    cout << "current pos x = " << x << " y = " << y  << " , " << "contourNum = " << contourNum << "\n";
+    DSLog(@"current pos x = %d, y = %d, contourNum = %d", x, y, contourNum);
     vector <int> noteset = region2scale[contourNum];
     
-    // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space, and generate a note
+    // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space
     if (noteset.size() > 0) {
-        cout << "there's a note ! \n";
         noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset);
     }
     
@@ -891,17 +863,14 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [_VI playMIDI:Note];
 }
 
-# pragma mark - refresh image
+# pragma mark - quit zone
 - (void) refreshImage {
-    NSLog(@"longPressed");
     [self.view bringSubviewToFront:_quit];
     [_quit setHidden:NO];
-    //_quit.alpha = 0;
     [UIView animateWithDuration:1 animations:^{_quit.alpha = 0.5;}];
 }
 
 - (IBAction)quit:(id)sender {
-    path = [UIBezierPath bezierPath];
     self.mainImage.image = nil;
     playEnable = NO;
     [_chooseImage setHidden:NO];
@@ -909,7 +878,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         UIButton *button = [_csButtonGrid objectAtIndex:i];
         [button setHidden:NO];
     }
-    [_Picker setHidden:NO];
+    [_csPicker setHidden:NO];
     [_csLabel setHidden:YES];
     [_quit setHidden:YES];
     currentCS = chordScaleSpace[0];
@@ -922,22 +891,15 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     totalCS = 0;
 }
 
-
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 /******chord-scale zone ******/
 #pragma mark - chord-scale zone
 - (IBAction)buttonClicker:(id)sender {
     UIButton *button = (UIButton *)sender;
     currentCSTag = (int) button.tag;
     
-    [_Picker selectRow:chordScaleIntSpace[currentCSTag].first inComponent:0 animated:YES ];
-    [_Picker selectRow:octavesInt[currentCSTag] inComponent:1 animated:YES];
-    [_Picker selectRow:chordScaleIntSpace[currentCSTag].second inComponent:2 animated:YES ];
+    [_csPicker selectRow:chordScaleIntSpace[currentCSTag].first inComponent:0 animated:YES ];
+    [_csPicker selectRow:octavesInt[currentCSTag] inComponent:1 animated:YES];
+    [_csPicker selectRow:chordScaleIntSpace[currentCSTag].second inComponent:2 animated:YES ];
     
     // set this button's appearance
     [button setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
@@ -961,7 +923,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 /****** Required by Pickerview controller ******/
 // returns the number of 'columns' to display.
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
-    if (pickerView == _Picker) {
+    if (pickerView == _csPicker) {
         return 3;
     } else {
         return 1;
@@ -970,7 +932,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 // returns the # of rows in each component..
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
-    if (pickerView == _Picker) {
+    if (pickerView == _csPicker) {
         if (component == 0) {
             return [_chordRootArray count];
         } else if (component == 1) {
@@ -984,7 +946,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 }
 
 - (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view {
-    if (pickerView == _Picker) {
+    if (pickerView == _csPicker) {
         if (component == 0) {
             UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, pickerView.frame.size.width, 20)];
             label.backgroundColor = [UIColor blackColor];
@@ -1024,7 +986,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
     // Set the chord-scale of the one chord-scale note via this
-    if (pickerView == _Picker) {
+    if (pickerView == _csPicker) {
         if (component == 0) {
             chordScaleSpace[currentCSTag].first =  [_chordRootArray objectAtIndex:row];
             chordScaleIntSpace[currentCSTag].first = (int)row;
@@ -1096,7 +1058,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     if (playEnable && totalCS > 0) {
         if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
             if (currentInstIdx == 0) {
-                currentInstIdx = _instrumentArray.count - 1;
+                currentInstIdx = (int)_instrumentArray.count - 1;
             } else {
                 currentInstIdx -- ;
             }
@@ -1109,7 +1071,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
                 [self changeOctaves:YES];
                 [self changeOctaves:YES];
             }
-            NSLog(@"SwipeRecognized Left");
+            DSLog(@"SwipeRecognized Left");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
             if (currentInstIdx == _instrumentArray.count - 1) {
                 currentInstIdx = 0;
@@ -1125,13 +1087,13 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
                 [self changeOctaves:YES];
                 [self changeOctaves:YES];
             }
-            NSLog(@"SwipeRecognized Right");
+            DSLog(@"SwipeRecognized Right");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionDown) {
             [self changeOctaves:NO];
-            NSLog(@"SwipeRecognized Down");
+            DSLog(@"SwipeRecognized Down");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionUp) {
             [self changeOctaves:YES];
-            NSLog(@"SwipeRecognized Up");
+            DSLog(@"SwipeRecognized Up");
         }
     }
 }
@@ -1160,7 +1122,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
 }
 
-#pragma mark - deal with backings dir
+#pragma mark - backing zone
 - (void)directoryDidChange:(DirectoryWatcher *)folderWatcher {
     
 }

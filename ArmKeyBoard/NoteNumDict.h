@@ -10,6 +10,6 @@
 
 @interface NoteNumDict : NSObject
 
-@property(nonatomic, readonly) NSDictionary *Dict;
+- (int) getNumforNote: (NSString *)noteName;
 
 @end

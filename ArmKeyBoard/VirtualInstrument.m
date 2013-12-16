@@ -9,6 +9,7 @@
 #import "VirtualInstrument.h"
 #import "MIDInote.h"
 #import <AssertMacros.h>
+#import "Definition.h"
 
 @interface VirtualInstrument()
 @property (readwrite) Float64   graphSampleRate;
@@ -138,11 +139,11 @@
 - (void)setInstrument:(NSString *)InstrumentName withInstrumentID:(UInt8)InstrID{
     NSURL *presetURL = [[NSURL alloc] initFileURLWithPath:[[NSBundle mainBundle] pathForResource:InstrumentName ofType:@"aupreset"]];
 	if (presetURL) {
-		NSLog(@"Attempting to load preset '%@'\n", [presetURL description]);
+		DSLog(@"Attempting to load preset '%@'\n", [presetURL description]);
         //self.currentPresetLabel.text = InstrumentName;	}
         self.currentPresetLabel = InstrumentName;   }
 	else {
-		NSLog(@"COULD NOT GET PRESET PATH!");
+		DSLog(@"COULD NOT GET PRESET PATH!");
 	}
     
 	[self loadSynthFromPresetURL: presetURL withInstrumentID:InstrID];
@@ -276,7 +277,7 @@
     
     UInt32 busCount   = 7;    // bus count for mixer unit input
     
-    NSLog (@"Setting mixer unit input bus count to: %u", (unsigned int)busCount);
+    DSLog (@"Setting mixer unit input bus count to: %u", (unsigned int)busCount);
     result = AudioUnitSetProperty (
                                    _mixerUnit,
                                    kAudioUnitProperty_ElementCount,
@@ -560,17 +561,17 @@
     //    audio output with the Ring/Silent switch in the Silent position.
     NSError *audioSessionError = nil;
     [mySession setCategory: AVAudioSessionCategoryPlayback error: &audioSessionError];
-    if (audioSessionError != nil) {NSLog (@"Error setting audio session category."); return NO;}
+    if (audioSessionError != nil) {DSLog (@"Error setting audio session category."); return NO;}
     
     // Request a desired hardware sample rate.
     self.graphSampleRate = 44100.0;    // Hertz
     
     [mySession setPreferredSampleRate: self.graphSampleRate error: &audioSessionError];
-    if (audioSessionError != nil) {NSLog (@"Error setting preferred hardware sample rate."); return NO;}
+    if (audioSessionError != nil) {DSLog (@"Error setting preferred hardware sample rate."); return NO;}
     
     // Activate the audio session
     [mySession setActive: YES error: &audioSessionError];
-    if (audioSessionError != nil) {NSLog (@"Error activating the audio session."); return NO;}
+    if (audioSessionError != nil) {DSLog (@"Error activating the audio session."); return NO;}
     
     // Obtain the actual hardware sample rate and store it for later use in the audio processing graph.
     self.graphSampleRate = [mySession sampleRate];
@@ -748,7 +749,7 @@
                                          error: &endInterruptionError];
     if (endInterruptionError != nil) {
         
-        NSLog (@"Unable to reactivate the audio session.");
+        DSLog (@"Unable to reactivate the audio session.");
         return;
     }
     

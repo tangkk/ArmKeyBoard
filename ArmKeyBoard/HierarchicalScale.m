@@ -8,6 +8,7 @@
 
 #import "HierarchicalScale.h"
 
+#import "Definition.h"
 @interface HierarchicalScale ()
 
 @property (readonly, nonatomic) NSArray *Lydian;
@@ -101,7 +102,7 @@ NSDictionary *midi2notename;
                           };
         
         
-        NSLog(@"****************Hierarchical Scale****************");
+        DSLog(@"****************Hierarchical Scale****************");
         /****** Lydian scale hierarchy ******
          L1:  1  5   3   7
          L2:  2   #4   6
@@ -220,7 +221,7 @@ NSDictionary *midi2notename;
     for (int i = 0; i < scale.count; i++) {
         NSArray *arr = [scale objectAtIndex:i];
         for (int j = 0; j < arr.count; j++) {
-            NSLog(@"%@ at %d, %d, is %@", name, i, j, [midi2notename objectForKey:[arr objectAtIndex:j]]);
+            DSLog(@"%@ at %d, %d, is %@", name, i, j, [midi2notename objectForKey:[arr objectAtIndex:j]]);
         }
     }
 }

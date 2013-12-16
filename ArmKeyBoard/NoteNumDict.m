@@ -8,7 +8,17 @@
 
 #import "NoteNumDict.h"
 
+@interface NoteNumDict()
+
+@property(nonatomic, readonly) NSDictionary *Dict;
+
+@end
+
 @implementation NoteNumDict
+
+- (int) getNumforNote: (NSString *)noteName {
+    return [[_Dict objectForKey:noteName] intValue];
+}
 
 -(id)init {
     self = [super init];

@@ -554,9 +554,9 @@
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <connections>
-                        <outlet property="Picker" destination="mfc-06-J8z" id="e1v-Tb-g2S"/>
                         <outlet property="chooseImage" destination="gdB-3H-Ghh" id="qzC-Yz-3P8"/>
                         <outlet property="csLabel" destination="W4Z-4Z-f9E" id="00Y-EF-0nt"/>
+                        <outlet property="csPicker" destination="mfc-06-J8z" id="scu-Sq-rfJ"/>
                         <outlet property="mainImage" destination="ATO-W0-Cj6" id="hrf-jv-5th"/>
                         <outlet property="quit" destination="a2L-OV-ldC" id="rsi-tN-1Ow"/>
                         <outletCollection property="csButtonGrid" destination="mf2-Hb-5Ag" id="Xhp-cR-B96"/>
