@@ -66,8 +66,10 @@ using namespace std;
     
     int currentCSTag;
     int currentCSIdx;
+    int currentInstIdx;
     pair<NSString *, NSString *> currentCS;
     NSString *currentOctave;
+    int currentInstrument;
     vector<pair<NSString *, NSString *> > chordScaleSpace;
     vector<pair<int, int> > chordScaleIntSpace;
     vector<NSString *> octaves;
@@ -99,6 +101,7 @@ using namespace std;
 @property (strong, nonatomic) NSArray *chordRootArray;
 @property (strong, nonatomic) NSArray *scaleArray;
 @property (strong, nonatomic) NSArray *octaveArray;
+@property (strong, nonatomic) NSArray *instrumentArray;
 @property (strong, nonatomic) IBOutlet UILabel *csLabel;
 @property (strong, nonatomic) IBOutlet UIButton *quit;
 
@@ -171,18 +174,21 @@ using namespace std;
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
     _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian", @"Locrian", @"Lydianb7", @"Altered", @"SymDim", @"MelMinor", nil];
     _octaveArray = [[NSArray alloc] initWithObjects:@"0", @"1", @"2", @"3", @"4", @"5", @"6", @"7", nil];
+    _instrumentArray = [[NSArray alloc] initWithObjects:@Piano, @SteelGuitar, /*@Guitar, @Trombone, */@Vibraphone, nil];
     _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
     _buttonUnClickedImg = [UIImage imageNamed:@"Chord-Scale"];
     currentCSTag = 0;
     lastCSTag = 0;
     currentCSIdx = 0;
     totalCS = 0;
+    currentInstIdx = 0;
     pair<NSString *, NSString *> none;
     pair<int, int> noneInt;
     none = make_pair(@"None", @"None");
     noneInt = make_pair(0, 0);
     currentCS = none;
     currentOctave = @"3";
+    currentInstrument = Piano;
     for (int i = 0; i < _csButtonGrid.count; i++) {
         chordScaleSpace.push_back(none);
         chordScaleIntSpace.push_back(noneInt);
@@ -257,7 +263,11 @@ using namespace std;
 - (void) musInfrastructureSetup {
     if (_VI == nil) {
         _VI = [[VirtualInstrument alloc] init];
+        [_VI setInstrument:@"Trombone" withInstrumentID:Trombone];
+        [_VI setInstrument:@"SteelGuitar" withInstrumentID:SteelGuitar];
+        //[_VI setInstrument:@"Guitar" withInstrumentID:Guitar];
         [_VI setInstrument:@"Piano" withInstrumentID:Piano];
+        [_VI setInstrument:@"Vibraphone" withInstrumentID:Vibraphone];
     }
     
     if (_Dict == nil) {
@@ -829,6 +839,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     return noteset[noteIdx];
 }
 
+#pragma mark - play action
+
 - (void) playAtPosX:(int)x Y:(int)y {
     bool isInside = false;
     float dist;
@@ -874,9 +886,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset);
     }
     
-    // FIXME: change velocity according to accelerometer value
     int velocity = 127 - MIN(ABS(gravityY * 127), 127);
-    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:Piano velocity:velocity SysEx:0 Root:kMIDINoteOn];
+    MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:currentInstrument velocity:velocity SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
 
@@ -904,6 +915,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     currentCS = chordScaleSpace[0];
     currentOctave = octaves[0];
     currentCSTag = 0;
+    currentInstIdx = 0;
+    currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
     lastCSTag = 0;
     currentCSIdx = 0;
     totalCS = 0;
@@ -1040,7 +1053,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 }
 
-#pragma mark - gestures
+#pragma mark - gestures zone
 - (void)tapRecognized:(UITapGestureRecognizer *) sender {
     [UIView animateWithDuration:0.5 animations:^{_quit.alpha = 0;}];
     if (sender.numberOfTouchesRequired == 1) {
@@ -1079,55 +1092,72 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     
 }
 
-/****** swipe gestures for switching between chord-scales******/
 - (void)swipeRecognized:(UISwipeGestureRecognizer *)sender {
     if (playEnable && totalCS > 0) {
         if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
-            if (currentCSIdx == 0) {
-                currentCSIdx = totalCS - 1;
+            if (currentInstIdx == 0) {
+                currentInstIdx = _instrumentArray.count - 1;
             } else {
-                currentCSIdx --;
+                currentInstIdx -- ;
             }
-            currentCS = chordScaleSpace[currentCSIdx];
-            currentOctave = octaves[currentCSIdx];
-            // refresh the chord-scale and the mapping
+            currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
+            
+            if (currentInstrument == SteelGuitar) {
+                [self changeOctaves:NO];
+                [self changeOctaves:NO];
+            } else if (currentInstrument == Piano) {
+                [self changeOctaves:YES];
+                [self changeOctaves:YES];
+            }
             NSLog(@"SwipeRecognized Left");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
-            if (currentCSIdx == totalCS - 1) {
-                currentCSIdx = 0;
+            if (currentInstIdx == _instrumentArray.count - 1) {
+                currentInstIdx = 0;
             } else {
-                currentCSIdx++;
+                currentInstIdx ++;
             }
-            currentCS = chordScaleSpace[currentCSIdx];
-            currentOctave = octaves[currentCSIdx];
-            // refresh the chord-scale and the mapping
+            currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
+            
+            if (currentInstrument == SteelGuitar) {
+                [self changeOctaves:NO];
+                [self changeOctaves:NO];
+            } else if (currentInstrument == Vibraphone) {
+                [self changeOctaves:YES];
+                [self changeOctaves:YES];
+            }
             NSLog(@"SwipeRecognized Right");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionDown) {
-            // lower octaves
-            for (int i = 0; i < octaves.size(); i ++) {
-                int oct = octavesInt[i];
-                if (oct > 0) {
-                    oct = -- octavesInt[i];
-                    octaves[i] = [_octaveArray objectAtIndex:oct];
-                }
-            }
-            currentOctave = octaves[currentCSIdx];
+            [self changeOctaves:NO];
             NSLog(@"SwipeRecognized Down");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionUp) {
-            // raise octaves
-            for (int i = 0; i < octaves.size(); i ++) {
-                int oct = octavesInt[i];
-                if (oct < 7) {
-                    oct = ++ octavesInt[i];
-                    octaves[i] = [_octaveArray objectAtIndex:oct];
-                }
-            }
-            currentOctave = octaves[currentCSIdx];
+            [self changeOctaves:YES];
             NSLog(@"SwipeRecognized Up");
         }
-        NSLog(@"currentCSIdx : %d", currentCSIdx);
-        [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
     }
+}
+
+- (void) changeOctaves: (bool)higher {
+    if (higher) {
+        // raise octaves
+        for (int i = 0; i < octaves.size(); i ++) {
+            int oct = octavesInt[i];
+            if (oct < 7) {
+                oct = ++ octavesInt[i];
+                octaves[i] = [_octaveArray objectAtIndex:oct];
+            }
+        }
+    } else {
+        // lower octaves
+        for (int i = 0; i < octaves.size(); i ++) {
+            int oct = octavesInt[i];
+            if (oct > 0) {
+                oct = -- octavesInt[i];
+                octaves[i] = [_octaveArray objectAtIndex:oct];
+            }
+        }
+    }
+     currentOctave = octaves[currentCSIdx];
+    [self region2hs:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
 }
 
 #pragma mark - deal with backings dir
