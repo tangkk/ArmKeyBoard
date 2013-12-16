@@ -40,13 +40,12 @@ using namespace std;
 @interface ViewController () {
     int thresh ;
     int contourmin;
+    double outerarea;                   // The imagesize excluding all the counted contour areas
+    cv::Mat srcMat;
     vector<vector<cv::Point> > mycontours;
     vector<int> contourmark;        // This is to mark the original contour number to the mycontour number
-    double outerarea;               // The imagesize excluding all the counted contour areas
     vector<cv::Vec4i> hierarchy;
-    map<int, vector<int> > region2scale;
-    cv::Mat srcMat;
-    bool playEnable;
+    map<int, vector<int> > region2scale;        // This is the very map between region and scale
     
     // Image : Screen Ratio
     float widthRatio;
@@ -56,8 +55,11 @@ using namespace std;
     double RPN15, RPN17;                    // region per note for 15 note scale or 17 note scale
     
     // chord-scale things
+    bool playEnable;
     int currentCSTag;
     int currentCSIdx;
+    int lastCSTag;
+    int totalCS;
     int currentInstIdx;
     pair<NSString *, NSString *> currentCS;
     NSString *currentOctave;
@@ -66,8 +68,6 @@ using namespace std;
     vector<pair<int, int> > chordScaleIntSpace;
     vector<NSString *> octaves;
     vector<int> octavesInt;
-    int totalCS;
-    int lastCSTag;
     
     // gravity readings
     float gravityX, gravityY, gravityZ;
@@ -76,6 +76,7 @@ using namespace std;
 
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
 @property (strong, nonatomic) IBOutlet UIButton *chooseImage;
+@property (strong, nonatomic) IBOutlet UIButton *quit;
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *csButtonGrid;
 @property (strong, nonatomic) UIImage *buttonClickedImg;
 @property (strong, nonatomic) UIImage *buttonUnClickedImg;
@@ -90,12 +91,11 @@ using namespace std;
 @property (strong, nonatomic) UILongPressGestureRecognizer *longPress;
 
 @property (strong, nonatomic) IBOutlet UIPickerView *csPicker;
+@property (strong, nonatomic) IBOutlet UILabel *csLabel;
 @property (strong, nonatomic) NSArray *chordRootArray;
 @property (strong, nonatomic) NSArray *scaleArray;
 @property (strong, nonatomic) NSArray *octaveArray;
 @property (strong, nonatomic) NSArray *instrumentArray;
-@property (strong, nonatomic) IBOutlet UILabel *csLabel;
-@property (strong, nonatomic) IBOutlet UIButton *quit;
 
 /* Virtual Instrument */
 @property (readonly) VirtualInstrument *VI;
@@ -116,13 +116,8 @@ using namespace std;
 {
     [super viewDidLoad];
     
-    thresh = 100;
-    contourmin = 100;
-    widthRatio = 1;
-    heightRatio = 1;
-    distRatio = 1;
-    playEnable = NO;
-    
+
+    [self opencvVarInit];
     [self musInfrastructureSetup];
     [self gesturesSetup];
     [self chordScaleGridSetup];
@@ -131,9 +126,8 @@ using namespace std;
 }
 
 - (void) viewWillAppear:(BOOL)animated {
-    [_csPicker selectRow:0 inComponent:0 animated:YES ];
-    [_csPicker selectRow:3 inComponent:1 animated:YES];
-    [_csPicker selectRow:0 inComponent:2 animated:YES ];
+    [super viewWillAppear:NO];
+    [self csPickerLookInit];
 }
 
 - (void)didReceiveMemoryWarning
@@ -143,6 +137,20 @@ using namespace std;
 }
 
 #pragma mark - setup zone
+
+- (void) csPickerLookInit {
+    [_csPicker selectRow:0 inComponent:0 animated:YES ];
+    [_csPicker selectRow:3 inComponent:1 animated:YES];
+    [_csPicker selectRow:0 inComponent:2 animated:YES ];
+}
+
+- (void) opencvVarInit {
+    thresh = 100;
+    contourmin = 100;
+    widthRatio = 1;
+    heightRatio = 1;
+    distRatio = 1;
+}
 
 - (void) gesturesSetup {
     _longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)];
@@ -174,6 +182,7 @@ using namespace std;
 }
 
 - (void) chordScaleGridSetup {
+    playEnable = NO;
     _chordRootArray = [[NSArray alloc] initWithObjects:@"None", @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B", nil];
     _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian",
                    @"Locrian", @"Lydianb7", @"Altered", @"SymDim", @"MelMinor", nil];
@@ -834,17 +843,16 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     }
     
     // FIXME: how to make good use the dist information?
-    dist = 0;
     //  Calculate the distance and scale it down the dist to the screen space, take the innermost contour's noteset.
-//    for (int i = 0; i < mycontours.size(); i++) {
-//        dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
-//        if(dist > 0) {
-//            dist /= distRatio;
-//            DSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
-//            isInside = true;
-//            contourNum = contourmark[i];
-//        }
-//    }
+    for (int i = 0; i < mycontours.size(); i++) {
+        dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
+        if(dist > 0) {
+            dist /= distRatio;
+            DSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
+            isInside = true;
+            contourNum = contourmark[i];
+        }
+    }
     
     if (! isInside) {
         DSLog(@"The current pos is in contour -1");
@@ -879,6 +887,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         [button setHidden:NO];
     }
     [_csPicker setHidden:NO];
+    [self csPickerLookInit];
     [_csLabel setHidden:YES];
     [_quit setHidden:YES];
     currentCS = chordScaleSpace[0];
@@ -1057,36 +1066,36 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 - (void)swipeRecognized:(UISwipeGestureRecognizer *)sender {
     if (playEnable && totalCS > 0) {
         if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
-            if (currentInstIdx == 0) {
-                currentInstIdx = (int)_instrumentArray.count - 1;
-            } else {
-                currentInstIdx -- ;
-            }
-            currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
-            
-            if (currentInstrument == SteelGuitar) {
-                [self changeOctaves:NO];
-                [self changeOctaves:NO];
-            } else if (currentInstrument == Piano) {
-                [self changeOctaves:YES];
-                [self changeOctaves:YES];
-            }
+//            if (currentInstIdx == 0) {
+//                currentInstIdx = (int)_instrumentArray.count - 1;
+//            } else {
+//                currentInstIdx -- ;
+//            }
+//            currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
+//            
+//            if (currentInstrument == SteelGuitar) {
+//                [self changeOctaves:NO];
+//                [self changeOctaves:NO];
+//            } else if (currentInstrument == Piano) {
+//                [self changeOctaves:YES];
+//                [self changeOctaves:YES];
+//            }
             DSLog(@"SwipeRecognized Left");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
-            if (currentInstIdx == _instrumentArray.count - 1) {
-                currentInstIdx = 0;
-            } else {
-                currentInstIdx ++;
-            }
-            currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
-            
-            if (currentInstrument == SteelGuitar) {
-                [self changeOctaves:NO];
-                [self changeOctaves:NO];
-            } else if (currentInstrument == Vibraphone) {
-                [self changeOctaves:YES];
-                [self changeOctaves:YES];
-            }
+//            if (currentInstIdx == _instrumentArray.count - 1) {
+//                currentInstIdx = 0;
+//            } else {
+//                currentInstIdx ++;
+//            }
+//            currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
+//            
+//            if (currentInstrument == SteelGuitar) {
+//                [self changeOctaves:NO];
+//                [self changeOctaves:NO];
+//            } else if (currentInstrument == Vibraphone) {
+//                [self changeOctaves:YES];
+//                [self changeOctaves:YES];
+//            }
             DSLog(@"SwipeRecognized Right");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionDown) {
             [self changeOctaves:NO];
