@@ -1280,7 +1280,7 @@
 						<key>loop start</key>
 						<integer>211198</integer>
 						<key>max key</key>
-						<integer>59</integer>
+						<integer>60</integer>
 						<key>max vel</key>
 						<integer>51</integer>
 						<key>min key</key>
@@ -1310,7 +1310,7 @@
 						<key>loop start</key>
 						<integer>239440</integer>
 						<key>max key</key>
-						<integer>59</integer>
+						<integer>60</integer>
 						<key>max vel</key>
 						<integer>88</integer>
 						<key>min key</key>
@@ -1340,7 +1340,7 @@
 						<key>loop start</key>
 						<integer>324064</integer>
 						<key>max key</key>
-						<integer>59</integer>
+						<integer>60</integer>
 						<key>max vel</key>
 						<integer>107</integer>
 						<key>min key</key>
@@ -1370,7 +1370,7 @@
 						<key>loop start</key>
 						<integer>324064</integer>
 						<key>max key</key>
-						<integer>59</integer>
+						<integer>60</integer>
 						<key>max vel</key>
 						<integer>127</integer>
 						<key>min key</key>
@@ -1385,118 +1385,6 @@
 						<integer>906</integer>
 						<key>waveform</key>
 						<integer>268435481</integer>
-					</dict>
-					<dict>
-						<key>ID</key>
-						<integer>89</integer>
-						<key>enabled</key>
-						<true/>
-						<key>fine tune</key>
-						<real>-1</real>
-						<key>loop enabled</key>
-						<true/>
-						<key>loop end</key>
-						<integer>282112</integer>
-						<key>loop start</key>
-						<integer>194503</integer>
-						<key>max key</key>
-						<integer>60</integer>
-						<key>max vel</key>
-						<integer>51</integer>
-						<key>min key</key>
-						<integer>60</integer>
-						<key>min vel</key>
-						<integer>0</integer>
-						<key>name</key>
-						<string>Zone #297</string>
-						<key>sample start</key>
-						<integer>41</integer>
-						<key>waveform</key>
-						<integer>268435482</integer>
-					</dict>
-					<dict>
-						<key>ID</key>
-						<integer>5</integer>
-						<key>enabled</key>
-						<true/>
-						<key>fine tune</key>
-						<real>-2</real>
-						<key>loop enabled</key>
-						<true/>
-						<key>loop end</key>
-						<integer>441294</integer>
-						<key>loop start</key>
-						<integer>336335</integer>
-						<key>max key</key>
-						<integer>60</integer>
-						<key>max vel</key>
-						<integer>88</integer>
-						<key>min key</key>
-						<integer>60</integer>
-						<key>min vel</key>
-						<integer>52</integer>
-						<key>name</key>
-						<string>Zone #298</string>
-						<key>sample start</key>
-						<integer>93</integer>
-						<key>waveform</key>
-						<integer>268435483</integer>
-					</dict>
-					<dict>
-						<key>ID</key>
-						<integer>1</integer>
-						<key>enabled</key>
-						<true/>
-						<key>fine tune</key>
-						<real>-2</real>
-						<key>loop enabled</key>
-						<true/>
-						<key>loop end</key>
-						<integer>467089</integer>
-						<key>loop start</key>
-						<integer>338191</integer>
-						<key>max key</key>
-						<integer>60</integer>
-						<key>max vel</key>
-						<integer>107</integer>
-						<key>min key</key>
-						<integer>60</integer>
-						<key>min vel</key>
-						<integer>89</integer>
-						<key>name</key>
-						<string>Zone #299</string>
-						<key>sample start</key>
-						<integer>560</integer>
-						<key>waveform</key>
-						<integer>268435484</integer>
-					</dict>
-					<dict>
-						<key>ID</key>
-						<integer>22</integer>
-						<key>enabled</key>
-						<true/>
-						<key>fine tune</key>
-						<real>-2</real>
-						<key>loop enabled</key>
-						<true/>
-						<key>loop end</key>
-						<integer>467089</integer>
-						<key>loop start</key>
-						<integer>338191</integer>
-						<key>max key</key>
-						<integer>60</integer>
-						<key>max vel</key>
-						<integer>127</integer>
-						<key>min key</key>
-						<integer>60</integer>
-						<key>min vel</key>
-						<integer>108</integer>
-						<key>name</key>
-						<string>Zone #300</string>
-						<key>sample start</key>
-						<integer>560</integer>
-						<key>waveform</key>
-						<integer>268435484</integer>
 					</dict>
 					<dict>
 						<key>ID</key>
@@ -4277,7 +4165,7 @@
 						<key>loop start</key>
 						<integer>238854</integer>
 						<key>max key</key>
-						<integer>59</integer>
+						<integer>60</integer>
 						<key>max vel</key>
 						<integer>51</integer>
 						<key>min key</key>
@@ -4305,7 +4193,7 @@
 						<key>loop start</key>
 						<integer>241060</integer>
 						<key>max key</key>
-						<integer>59</integer>
+						<integer>60</integer>
 						<key>max vel</key>
 						<integer>86</integer>
 						<key>min key</key>
@@ -4333,7 +4221,7 @@
 						<key>loop start</key>
 						<integer>239145</integer>
 						<key>max key</key>
-						<integer>59</integer>
+						<integer>60</integer>
 						<key>max vel</key>
 						<integer>106</integer>
 						<key>min key</key>
@@ -4363,7 +4251,7 @@
 						<key>loop start</key>
 						<integer>239145</integer>
 						<key>max key</key>
-						<integer>59</integer>
+						<integer>60</integer>
 						<key>max vel</key>
 						<integer>127</integer>
 						<key>min key</key>
@@ -4378,110 +4266,6 @@
 						<integer>875</integer>
 						<key>waveform</key>
 						<integer>268435562</integer>
-					</dict>
-					<dict>
-						<key>ID</key>
-						<integer>89</integer>
-						<key>enabled</key>
-						<true/>
-						<key>fine tune</key>
-						<real>14</real>
-						<key>loop enabled</key>
-						<true/>
-						<key>loop end</key>
-						<integer>436597</integer>
-						<key>loop start</key>
-						<integer>289933</integer>
-						<key>max key</key>
-						<integer>60</integer>
-						<key>max vel</key>
-						<integer>51</integer>
-						<key>min key</key>
-						<integer>60</integer>
-						<key>min vel</key>
-						<integer>0</integer>
-						<key>name</key>
-						<string>Zone #301</string>
-						<key>waveform</key>
-						<integer>268435563</integer>
-					</dict>
-					<dict>
-						<key>ID</key>
-						<integer>5</integer>
-						<key>enabled</key>
-						<true/>
-						<key>fine tune</key>
-						<real>14</real>
-						<key>loop enabled</key>
-						<true/>
-						<key>loop end</key>
-						<integer>475143</integer>
-						<key>loop start</key>
-						<integer>352404</integer>
-						<key>max key</key>
-						<integer>60</integer>
-						<key>max vel</key>
-						<integer>86</integer>
-						<key>min key</key>
-						<integer>60</integer>
-						<key>min vel</key>
-						<integer>52</integer>
-						<key>name</key>
-						<string>Zone #302</string>
-						<key>waveform</key>
-						<integer>268435533</integer>
-					</dict>
-					<dict>
-						<key>ID</key>
-						<integer>1</integer>
-						<key>enabled</key>
-						<true/>
-						<key>fine tune</key>
-						<real>14</real>
-						<key>loop enabled</key>
-						<true/>
-						<key>loop end</key>
-						<integer>546268</integer>
-						<key>loop start</key>
-						<integer>373027</integer>
-						<key>max key</key>
-						<integer>60</integer>
-						<key>max vel</key>
-						<integer>106</integer>
-						<key>min key</key>
-						<integer>60</integer>
-						<key>min vel</key>
-						<integer>87</integer>
-						<key>name</key>
-						<string>Zone #303</string>
-						<key>waveform</key>
-						<integer>268435564</integer>
-					</dict>
-					<dict>
-						<key>ID</key>
-						<integer>22</integer>
-						<key>enabled</key>
-						<true/>
-						<key>fine tune</key>
-						<real>14</real>
-						<key>loop enabled</key>
-						<true/>
-						<key>loop end</key>
-						<integer>546268</integer>
-						<key>loop start</key>
-						<integer>373027</integer>
-						<key>max key</key>
-						<integer>60</integer>
-						<key>max vel</key>
-						<integer>127</integer>
-						<key>min key</key>
-						<integer>60</integer>
-						<key>min vel</key>
-						<integer>107</integer>
-						<key>name</key>
-						<string>Zone #304</string>
-						<key>waveform</key>
-						<integer>268435564</integer>
 					</dict>
 					<dict>
 						<key>ID</key>

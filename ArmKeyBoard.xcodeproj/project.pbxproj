@@ -11,6 +11,7 @@
 		90462AFB182CB5B900C077E4 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */; };
 		904BA701185807D000FBA6EE /* Chord-Scale-white.png in Resources */ = {isa = PBXBuildFile; fileRef = 904BA6FF185807D000FBA6EE /* Chord-Scale-white.png */; };
 		904BA702185807D000FBA6EE /* Chord-Scale.png in Resources */ = {isa = PBXBuildFile; fileRef = 904BA700185807D000FBA6EE /* Chord-Scale.png */; };
+		90512A171861A713003D750F /* Piano.aupreset in Resources */ = {isa = PBXBuildFile; fileRef = 90512A161861A713003D750F /* Piano.aupreset */; };
 		90779062185E9999004B7E35 /* SteelGuitar.aupreset in Resources */ = {isa = PBXBuildFile; fileRef = 9077905F185E9999004B7E35 /* SteelGuitar.aupreset */; };
 		90779063185E9999004B7E35 /* Trombone.aupreset in Resources */ = {isa = PBXBuildFile; fileRef = 90779060185E9999004B7E35 /* Trombone.aupreset */; };
 		90779064185E9999004B7E35 /* Vibraphone.aupreset in Resources */ = {isa = PBXBuildFile; fileRef = 90779061185E9999004B7E35 /* Vibraphone.aupreset */; };
@@ -24,8 +25,6 @@
 		9078F3571839B1DA00EA23F5 /* VirtualInstrument.m in Sources */ = {isa = PBXBuildFile; fileRef = 9078F34F1839B1DA00EA23F5 /* VirtualInstrument.m */; };
 		9078F3591839B20500EA23F5 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9078F3581839B20500EA23F5 /* AudioToolbox.framework */; };
 		9078F35B1839B20C00EA23F5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9078F35A1839B20C00EA23F5 /* AVFoundation.framework */; };
-		9078F3601839B24000EA23F5 /* Piano.aupreset in Resources */ = {isa = PBXBuildFile; fileRef = 9078F35F1839B24000EA23F5 /* Piano.aupreset */; };
-		9078F3611839B24000EA23F5 /* Piano.aupreset in Resources */ = {isa = PBXBuildFile; fileRef = 9078F35F1839B24000EA23F5 /* Piano.aupreset */; };
 		9078F9181839B2E300EA23F5 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 9078F9171839B2E300EA23F5 /* Sounds */; };
 		9078F9191839B2E300EA23F5 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 9078F9171839B2E300EA23F5 /* Sounds */; };
 		9096A0D5185AE918004971FF /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9096A0D4185AE918004971FF /* CoreMotion.framework */; };
@@ -62,6 +61,7 @@
 		90462AFA182CB5B900C077E4 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
 		904BA6FF185807D000FBA6EE /* Chord-Scale-white.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Chord-Scale-white.png"; sourceTree = "<group>"; };
 		904BA700185807D000FBA6EE /* Chord-Scale.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Chord-Scale.png"; sourceTree = "<group>"; };
+		90512A161861A713003D750F /* Piano.aupreset */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Piano.aupreset; sourceTree = "<group>"; };
 		9077905F185E9999004B7E35 /* SteelGuitar.aupreset */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = SteelGuitar.aupreset; sourceTree = "<group>"; };
 		90779060185E9999004B7E35 /* Trombone.aupreset */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Trombone.aupreset; sourceTree = "<group>"; };
 		90779061185E9999004B7E35 /* Vibraphone.aupreset */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Vibraphone.aupreset; sourceTree = "<group>"; };
@@ -76,7 +76,6 @@
 		9078F34F1839B1DA00EA23F5 /* VirtualInstrument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VirtualInstrument.m; sourceTree = "<group>"; };
 		9078F3581839B20500EA23F5 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		9078F35A1839B20C00EA23F5 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		9078F35F1839B24000EA23F5 /* Piano.aupreset */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Piano.aupreset; sourceTree = "<group>"; };
 		9078F9171839B2E300EA23F5 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = SOURCE_ROOT; };
 		9096A0D4185AE918004971FF /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		9096A0D9185B0B7F004971FF /* DirectoryWatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirectoryWatcher.h; sourceTree = "<group>"; };
@@ -136,7 +135,7 @@
 		90DFA4EE181B56BC00145DB9 = {
 			isa = PBXGroup;
 			children = (
-				9078F35F1839B24000EA23F5 /* Piano.aupreset */,
+				90512A161861A713003D750F /* Piano.aupreset */,
 				9077905F185E9999004B7E35 /* SteelGuitar.aupreset */,
 				90779065185E9BD8004B7E35 /* Guitar.aupreset */,
 				90779060185E9999004B7E35 /* Trombone.aupreset */,
@@ -307,6 +306,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				90512A171861A713003D750F /* Piano.aupreset in Resources */,
 				9078F9181839B2E300EA23F5 /* Sounds in Resources */,
 				90DFA511181B56BC00145DB9 /* Main_iPad.storyboard in Resources */,
 				90DFA516181B56BC00145DB9 /* Images.xcassets in Resources */,
@@ -315,7 +315,6 @@
 				90DFA505181B56BC00145DB9 /* InfoPlist.strings in Resources */,
 				904BA701185807D000FBA6EE /* Chord-Scale-white.png in Resources */,
 				90779062185E9999004B7E35 /* SteelGuitar.aupreset in Resources */,
-				9078F3601839B24000EA23F5 /* Piano.aupreset in Resources */,
 				90779063185E9999004B7E35 /* Trombone.aupreset in Resources */,
 				90779066185E9BD8004B7E35 /* Guitar.aupreset in Resources */,
 				904BA702185807D000FBA6EE /* Chord-Scale.png in Resources */,
@@ -327,7 +326,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				9078F9191839B2E300EA23F5 /* Sounds in Resources */,
-				9078F3611839B24000EA23F5 /* Piano.aupreset in Resources */,
 				90DFA527181B56BC00145DB9 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
