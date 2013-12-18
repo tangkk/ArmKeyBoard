@@ -35,6 +35,8 @@
 // Opencv configuration
 //#define CANNY
 
+// FIXME: still need to add some drawing functionalities in the future
+
 using namespace std;
 
 @interface ViewController () {
@@ -808,7 +810,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             }
         }
     }
-    #ifdef TEST
+#ifdef TEST
      // print out the regsion2scale map
     for (map<int, vector<int> >::iterator I = region2scale.begin(), E = region2scale.end(); I != E; ++I) {
         int key = (*I).first;
@@ -830,12 +832,10 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     int noteIdx;
     if (oneContour) {
         // regress to the simple linear keyboard layout
-        noteIdx = numberofNotes - 1 - MIN((y * numberofNotes) / height, numberofNotes - 1);
+        noteIdx = numberofNotes - 1 - MIN(floor((y * numberofNotes) / height), numberofNotes - 1);
     } else {
         noteIdx = ((x + y) % 10 + (R + G + B)) % numberofNotes;
     }
-    
-    
     return noteset[noteIdx];
 }
 
@@ -895,7 +895,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     } else {
         velocity = 127 - MIN(ABS(gravityY * 127), 127);
     }
-    // FIXME: The C4 note always sounds weired... don't know why
+    // FIXME: The C4 note always sounds weired... don't know why (fixed, delete all the 60 related entries of the piano.aupreset)
     MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:currentInstrument velocity:velocity SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
