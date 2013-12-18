@@ -743,6 +743,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     [UIView animateWithDuration:1 animations:^{_csLabel.alpha = 0.5;}];
     [UIView animateWithDuration:1 animations:^{_csLabel.alpha = 0.0;}];
     
+    // FIXME: if there's only one contour, make it linear layout like the original WIJAM keyboard(because there's no need to distributed layout anymore)
     for (int i = 0; i < mycontours.size(); i++) {
         vector<cv::Point> contour = mycontours[i];
         double contourarea;
@@ -814,6 +815,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 #pragma mark - play zone
 
+// FIXME: make some animation to give visual feedback on the multiple tapping
 - (void) playAtPosX:(int)x Y:(int)y {
     bool isInside = false;
     float dist;
@@ -1060,6 +1062,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 - (void)swipeRecognized:(UISwipeGestureRecognizer *)sender {
     if (playEnable && totalCS > 0) {
+        // FIXME: think of another good mechanism to switch between instruments
         if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
 //            if (currentInstIdx == 0) {
 //                currentInstIdx = (int)_instrumentArray.count - 1;
