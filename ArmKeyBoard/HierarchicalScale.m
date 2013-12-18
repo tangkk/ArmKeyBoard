@@ -35,6 +35,18 @@
 @property (readonly, nonatomic) NSArray *SymDimSeq;
 @property (readonly, nonatomic) NSArray *MelMinorSeq;
 
+//@property (readonly, nonatomic) NSArray *LydianLinear;
+//@property (readonly, nonatomic) NSArray *IonianLinear;
+//@property (readonly, nonatomic) NSArray *MixolydianLinear;
+//@property (readonly, nonatomic) NSArray *DorianLinear;
+//@property (readonly, nonatomic) NSArray *AeolianLinear;
+//@property (readonly, nonatomic) NSArray *PhrygianLinear;
+//@property (readonly, nonatomic) NSArray *LocrianLinear;
+//@property (readonly, nonatomic) NSArray *Lydianb7Linear;
+//@property (readonly, nonatomic) NSArray *AlteredLinear;
+//@property (readonly, nonatomic) NSArray *SymDimLinear;
+//@property (readonly, nonatomic) NSArray *MelMinorLinear;
+
 @end
 
 @implementation HierarchicalScale

@@ -53,6 +53,7 @@ using namespace std;
     float distRatio;
     double imagesize, screensize;
     double RPN15, RPN17;                    // region per note for 15 note scale or 17 note scale
+    bool isOneContour;
     
     // chord-scale things
     bool playEnable;
@@ -150,6 +151,7 @@ using namespace std;
     widthRatio = 1;
     heightRatio = 1;
     distRatio = 1;
+    isOneContour = false;
 }
 
 - (void) gesturesSetup {
@@ -536,12 +538,12 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         }
     }
     
-// ******outer contours - create an outer contour (the whole screen) when no contour is detected ******//
+// ******outer contours - create an outer contour (the whole screen) when no contour is detected, otherwise just use the fake one ******//
     if (mycontours.size()) {
         mycontours.push_back(outercontour);
         contourmark.push_back(-1);
     } else {
-        DSLog(@"******create outer contour******");
+        DSLog(@"******create outer contour, and it's the only contour******");
         vector<cv::Point> contour;
         cv::Point P0(0, 0);
         cv::Point P1(_mainImage.image.size.width, 0);
@@ -553,6 +555,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         contour.push_back(P3);
         mycontours.push_back(contour);
         contourmark.push_back(-1);
+        isOneContour = true;
     }
     
     /******Print out the new hierarchy******/
@@ -700,6 +703,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     [picker dismissViewControllerAnimated:YES completion:nil];
 }
 
+#pragma mark - mapping algorithm zone
+
 // Apply an intelligent algorithm to 1. map the regions to notes; 2. fine elaborate the very note details according to the very tapping context
 /* Note that this is not a "problem statement" in mathematical sense
  Problem statement 1: Given a set of regions of pixels that together form a large rectangular image,
@@ -730,7 +735,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 - (void) regionToHierarchicalScale:(NSString *) scaleName withTonic:(NSString *)tonic withOctave:(NSString *)oct {
     int mapstart = 0;
     float accum = 0;
-    region2scale.clear();
+    
     NSString *compRoot = [[NSString alloc] initWithFormat:@"%@%@", tonic, oct];
     DSLog(@"compRoot is %@", compRoot);
     int root = [_dict getNumforNote:compRoot];
@@ -744,52 +749,66 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     [UIView animateWithDuration:1 animations:^{_csLabel.alpha = 0.0;}];
     
     // FIXME: if there's only one contour, make it linear layout like the original WIJAM keyboard(because there's no need to distributed layout anymore)
-    for (int i = 0; i < mycontours.size(); i++) {
-        vector<cv::Point> contour = mycontours[i];
-        double contourarea;
-        if (contourmark[i] == -1) {
-            contourarea = outerarea;
-        } else {
-            contourarea = contourArea(contour);
-        }
-        
-        float ratio;
-        if ([scaleName isEqualToString:@"Altered"] || [scaleName isEqualToString:@"SymDim"]) {
-            ratio = contourarea / RPN17;
-        } else {
-            ratio = contourarea / RPN15;
-        }
-        int contmark = contourmark[i];
-        DSLog(@"contmark: %d", contmark);
-        DSLog(@"ratio = %f", ratio);
-        
+    // and make also some lines to separate the keyboard. And at the same time sort the hierarchical scale also.
+    region2scale.clear();
+    if (isOneContour) {
+        vector<int> notes;
         NSArray *scale = [_HS getScale:scaleName];
-        if (ratio >= 1) {
-            // map notes to regions
-            int number = floor(ratio);
-            vector<int> notes;
-            for (int j = mapstart; j < MIN(mapstart + number, scale.count); j++) {
-                notes.push_back([[scale objectAtIndex:j] intValue] + root);
+        for (int j = 0; j < scale.count; j++) {
+            notes.push_back([[scale objectAtIndex:j] intValue] + root);
+        }
+        // sort the note set because in this case the keyboard is regressed to the simplest linear layout
+        sort(notes.begin(), notes.end());
+        // Finally we insert an entry to the map
+        region2scale[-1] = notes;
+    } else {
+        for (int i = 0; i < mycontours.size(); i++) {
+            vector<cv::Point> contour = mycontours[i];
+            double contourarea;
+            if (contourmark[i] == -1) {
+                contourarea = outerarea;
+            } else {
+                contourarea = contourArea(contour);
             }
-            // Finally we insert an entry to the map
-            region2scale[contmark] = notes;
-            mapstart += number;
-        } else {
-            // map regions to notes
-            vector<int> notes;
-            notes.push_back([[scale objectAtIndex:MIN(mapstart, scale.count - 1)] intValue] + root);
-            region2scale[contmark] = notes;
-            accum += ratio;
-            if (accum >= 1) {
-                accum = 0;
-                mapstart++;
-                if (mapstart >= scale.count) {
-                    mapstart = (int) scale.count - 1;
+            
+            float ratio;
+            if ([scaleName isEqualToString:@"Altered"] || [scaleName isEqualToString:@"SymDim"]) {
+                ratio = contourarea / RPN17;
+            } else {
+                ratio = contourarea / RPN15;
+            }
+            int contmark = contourmark[i];
+            DSLog(@"contmark: %d", contmark);
+            DSLog(@"ratio = %f", ratio);
+            
+            NSArray *scale = [_HS getScale:scaleName];
+            if (ratio >= 1) {
+                // map notes to regions
+                int number = floor(ratio);
+                vector<int> notes;
+                for (int j = mapstart; j < MIN(mapstart + number, scale.count); j++) {
+                    notes.push_back([[scale objectAtIndex:j] intValue] + root);
+                }
+                // Finally we insert an entry to the map
+                region2scale[contmark] = notes;
+                mapstart += number;
+            } else {
+                // map regions to notes
+                vector<int> notes;
+                notes.push_back([[scale objectAtIndex:MIN(mapstart, scale.count - 1)] intValue] + root);
+                region2scale[contmark] = notes;
+                accum += ratio;
+                if (accum >= 1) {
+                    accum = 0;
+                    mapstart++;
+                    if (mapstart >= scale.count) {
+                        mapstart = (int) scale.count - 1;
+                    }
                 }
             }
         }
     }
-#ifdef TEST
+    #ifdef TEST
      // print out the regsion2scale map
     for (map<int, vector<int> >::iterator I = region2scale.begin(), E = region2scale.end(); I != E; ++I) {
         int key = (*I).first;
@@ -804,11 +823,18 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 #endif
 }
 
-static int context2noteNum (int x, int y, float dist, int contourNum, int R, int G, int B, vector<int> &noteset) {
+static int context2noteNum (int x, int y, float dist, int contourNum, int R, int G, int B, vector<int> &noteset, bool oneContour, float height) {
     int numberofNotes = (int) noteset.size();
     // Make sure every note within this region get chance to show up
     // A simple but workable approach:
-    int noteIdx = ((x + y) % 10 + (R + G + B)) % numberofNotes;
+    int noteIdx;
+    if (oneContour) {
+        // regress to the simple linear keyboard layout
+        noteIdx = numberofNotes - 1 - MIN((y * numberofNotes) / height, numberofNotes - 1);
+    } else {
+        noteIdx = ((x + y) % 10 + (R + G + B)) % numberofNotes;
+    }
+    
     
     return noteset[noteIdx];
 }
@@ -839,6 +865,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     }
     
     // FIXME: how to make good use the dist information?
+    // FIXME: how to eliminate the need of the below calculation to determine in which contour the point is inside
     //  Calculate the distance and scale it down the dist to the screen space, take the innermost contour's noteset.
     for (int i = 0; i < mycontours.size(); i++) {
         dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
@@ -859,10 +886,16 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     
     // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space
     if (noteset.size() > 0) {
-        noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset);
+        noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset, isOneContour, self.view.frame.size.height);
     }
     
-    int velocity = 127 - MIN(ABS(gravityY * 127), 127);
+    int velocity;
+    if (isOneContour) {
+        velocity = MIN((x * 127 / self.view.frame.size.width), 127);
+    } else {
+        velocity = 127 - MIN(ABS(gravityY * 127), 127);
+    }
+    // FIXME: The C4 note always sounds weired... don't know why
     MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:currentInstrument velocity:velocity SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
@@ -895,6 +928,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     lastCSTag = 0;
     currentCSIdx = 0;
     totalCS = 0;
+    isOneContour = false;
 }
 
 /******chord-scale zone ******/
