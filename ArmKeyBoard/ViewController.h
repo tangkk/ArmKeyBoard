@@ -9,6 +9,6 @@
 #import <UIKit/UIKit.h>
 #import "DirectoryWatcher.h"
 
-@interface ViewController : UIViewController <UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPickerViewDataSource, UIPickerViewDelegate,DirectoryWatcherDelegate>
+@interface ViewController : UIViewController <UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPickerViewDataSource, UIPickerViewDelegate,DirectoryWatcherDelegate, UIGestureRecognizerDelegate>
 
 @end

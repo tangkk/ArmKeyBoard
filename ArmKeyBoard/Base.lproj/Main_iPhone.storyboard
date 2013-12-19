@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="4514" systemVersion="13A603" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="vXZ-lx-hvc">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="4514" systemVersion="13B42" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="vXZ-lx-hvc">
     <dependencies>
         <deployment defaultVersion="1536" identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3747"/>
@@ -538,18 +538,6 @@
                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="a2L-OV-ldC">
-                                <rect key="frame" x="122" y="262" width="81" height="44"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" name="Noteworthy-Bold" family="Noteworthy" pointSize="20"/>
-                                <state key="normal" title="Quit" backgroundImage="Chord-Scale.png">
-                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                                <connections>
-                                    <action selector="quit:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="uBO-t6-ITG"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
@@ -558,7 +546,6 @@
                         <outlet property="csLabel" destination="W4Z-4Z-f9E" id="00Y-EF-0nt"/>
                         <outlet property="csPicker" destination="mfc-06-J8z" id="scu-Sq-rfJ"/>
                         <outlet property="mainImage" destination="ATO-W0-Cj6" id="hrf-jv-5th"/>
-                        <outlet property="quit" destination="a2L-OV-ldC" id="rsi-tN-1Ow"/>
                         <outletCollection property="csButtonGrid" destination="mf2-Hb-5Ag" id="Xhp-cR-B96"/>
                         <outletCollection property="csButtonGrid" destination="RKp-OV-mxc" id="JDf-Gm-q3x"/>
                         <outletCollection property="csButtonGrid" destination="Ifx-XA-Vuq" id="Hl6-j3-EEu"/>

@@ -79,19 +79,15 @@ using namespace std;
 /* Gesture things and views*/
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
 @property (strong, nonatomic) IBOutlet UIButton *chooseImage;
-@property (strong, nonatomic) IBOutlet UIButton *quit;
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *csButtonGrid;
 @property (strong, nonatomic) UIImage *buttonClickedImg;
 @property (strong, nonatomic) UIImage *buttonUnClickedImg;
-@property (strong, nonatomic) UISwipeGestureRecognizer *swipeLeft;
-@property (strong, nonatomic) UISwipeGestureRecognizer *swipeRight;
+@property (strong, nonatomic) UISwipeGestureRecognizer *swipeTripleUp;
+@property (strong, nonatomic) UISwipeGestureRecognizer *swipeTripleDown;
+@property (strong, nonatomic) UISwipeGestureRecognizer *swipeDoubleUp;
+@property (strong, nonatomic) UISwipeGestureRecognizer *swipeDoubleDown;
 @property (strong, nonatomic) UISwipeGestureRecognizer *swipeDown;
 @property (strong, nonatomic) UISwipeGestureRecognizer *swipeUp;
-@property (strong, nonatomic) UITapGestureRecognizer *tap;
-@property (strong, nonatomic) UITapGestureRecognizer *doubletap;
-@property (strong, nonatomic) UITapGestureRecognizer *tripletap;
-@property (strong, nonatomic) UITapGestureRecognizer *quadrupletap;
-@property (strong, nonatomic) UILongPressGestureRecognizer *longPress;
 
 /* chord-scale things */
 @property (strong, nonatomic) IBOutlet UIPickerView *csPicker;
@@ -157,32 +153,29 @@ using namespace std;
 }
 
 - (void) gesturesSetup {
-    _longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(refreshImage)];
-    _swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
-    _swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    self.view.multipleTouchEnabled = YES;
+    _swipeTripleUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    _swipeTripleDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    _swipeDoubleUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
+    _swipeDoubleDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
     _swipeUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRecognized:)];
-    _tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
-    _doubletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
-    _tripletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
-    _quadrupletap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapRecognized:)];
-    [_longPress setMinimumPressDuration:2];
-    [_swipeLeft setDirection:UISwipeGestureRecognizerDirectionLeft];
-    [_swipeRight setDirection:UISwipeGestureRecognizerDirectionRight];
+    [_swipeTripleUp setDirection:UISwipeGestureRecognizerDirectionUp];
+    [_swipeTripleDown setDirection:UISwipeGestureRecognizerDirectionDown];
+    [_swipeDoubleUp setDirection:UISwipeGestureRecognizerDirectionUp];
+    [_swipeDoubleDown setDirection:UISwipeGestureRecognizerDirectionDown];
     [_swipeDown setDirection:UISwipeGestureRecognizerDirectionDown];
     [_swipeUp setDirection:UISwipeGestureRecognizerDirectionUp];
-    [_doubletap setNumberOfTouchesRequired:2];
-    [_tripletap setNumberOfTouchesRequired:3];
-    [_quadrupletap setNumberOfTouchesRequired:4];
-    [self.view addGestureRecognizer:_swipeLeft];
-    [self.view addGestureRecognizer:_swipeRight];
+    _swipeDoubleUp.numberOfTouchesRequired = 2;
+    _swipeDoubleDown.numberOfTouchesRequired = 2;
+    _swipeTripleUp.numberOfTouchesRequired = 3;
+    _swipeTripleDown.numberOfTouchesRequired = 3;
+    [self.view addGestureRecognizer:_swipeTripleUp];
+    [self.view addGestureRecognizer:_swipeTripleDown];
+    [self.view addGestureRecognizer:_swipeDoubleUp];
+    [self.view addGestureRecognizer:_swipeDoubleDown];
     [self.view addGestureRecognizer:_swipeDown];
     [self.view addGestureRecognizer:_swipeUp];
-    [self.view addGestureRecognizer:_tap];
-    [self.view addGestureRecognizer:_doubletap];
-    [self.view addGestureRecognizer:_tripletap];
-    [self.view addGestureRecognizer:_quadrupletap];
-    [self.view addGestureRecognizer:_longPress];
 }
 
 - (void) chordScaleGridSetup {
@@ -213,7 +206,6 @@ using namespace std;
         octavesInt.push_back(3);
     }
     [_csLabel setHidden:YES];
-    [_quit setHidden:YES];
 }
 
 - (void) coreMotionSetup {
@@ -227,6 +219,8 @@ using namespace std;
             gravityX = acceleration.x;
             gravityY = acceleration.y;
             gravityZ = acceleration.z;
+            
+            DSLog(@"gravityX: %f, gravityZ: %f", gravityX, gravityZ);
             
             // flip the page if abs x is larger than a certain number
             if (!gravityGuard) {
@@ -261,6 +255,10 @@ using namespace std;
             
             if (gravityX > -0.5 && gravityX < 0.5) {
                 gravityGuard = false;
+            }
+            
+            if (gravityZ > 0.9) {
+                [self quit];
             }
         }];
     }
@@ -503,7 +501,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     contours.clear();
     outercontour.clear();
     hierarchy.clear();
-        
+    
 #ifdef CANNY
     cv::Canny( targtImg, canny_output, thresh, thresh*2, 3 );
     findContours( canny_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
@@ -511,8 +509,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     cv::threshold( targtImg, threshold_output, thresh, 255, cv::THRESH_BINARY );
     findContours( threshold_output, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 #endif
-
-// ******delete some small contours and the corresponding hierarchy nodes.******//
+    
+    // ******delete some small contours and the corresponding hierarchy nodes.******//
     /******Print out the old hierarchy******/
     DSLog(@"******Hierarchy******") ;
 #ifdef TEST
@@ -540,7 +538,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         }
     }
     
-// ******outer contours - create an outer contour (the whole screen) when no contour is detected, otherwise just use the fake one ******//
+    // ******outer contours - create an outer contour (the whole screen) when no contour is detected, otherwise just use the fake one ******//
     if (mycontours.size()) {
         mycontours.push_back(outercontour);
         contourmark.push_back(-1);
@@ -568,7 +566,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
 #endif
     
-// ****** sort contours ******//
+    // ****** sort contours ******//
     DSLog(@"******original contourmark******") ;
     for (vector<int>::iterator i = contourmark.begin(), e = contourmark.end(); i != e; ++i) {
         DSLog(@"%d", (*i));
@@ -583,7 +581,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         DSLog(@"%d", (*i));
     }
     
-// ******draw contours ******//
+    // ******draw contours ******//
     cv::RNG rng(12345);
     cv::Mat drawing;
 #ifdef CANNY
@@ -628,8 +626,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     
     if (([UIImagePickerController isSourceTypeAvailable:
           UIImagePickerControllerSourceTypeSavedPhotosAlbum] == NO)
-         || (delegate == nil)
-         || (controller == nil)) {
+        || (delegate == nil)
+        || (controller == nil)) {
         return NO;
     }
     
@@ -651,7 +649,6 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
     [_csPicker setHidden:YES];
     [_csLabel setHidden:YES];
-    [_quit setHidden:YES];
     
     // Calculate the total chord-scales (only consecutive chord-scale in the space counts)
     playEnable = YES;
@@ -701,7 +698,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
-    [self quit:_quit];
+    [self quit];
     [picker dismissViewControllerAnimated:YES completion:nil];
 }
 
@@ -716,7 +713,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
  Problem statement 2: Given a region containing several notes, and a tapping position,
  together with the pixel's RGB value, determine which note to be selected and the velocity of this note,
  such that a non-musical player can improvise along a corresponding chord moment musically.
-*/
+ */
 /* Key observation:
  1. Every scale has a tonic note, which the underlining chord moment put stress on
  2. Every other notes has some kind of "degree" related to the tonic note, and "functionality" and "importance"  to each other
@@ -811,7 +808,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         }
     }
 #ifdef TEST
-     // print out the regsion2scale map
+    // print out the regsion2scale map
     for (map<int, vector<int> >::iterator I = region2scale.begin(), E = region2scale.end(); I != E; ++I) {
         int key = (*I).first;
         vector<int> value = (*I).second;
@@ -841,7 +838,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 #pragma mark - play zone
 
-// FIXME: make some animation to give visual feedback on the multiple tapping
+// FIXME: make some animation to give visual feedback on the multiple touching
 - (void) playAtPosX:(int)x Y:(int)y {
     bool isInside = false;
     float dist;
@@ -902,13 +899,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 # pragma mark - quit zone
 
-- (void) refreshImage {
-    [self.view bringSubviewToFront:_quit];
-    [_quit setHidden:NO];
-    [UIView animateWithDuration:1 animations:^{_quit.alpha = 0.5;}];
-}
-
-- (IBAction)quit:(id)sender {
+- (void) quit {
     self.mainImage.image = nil;
     playEnable = NO;
     [_chooseImage setHidden:NO];
@@ -919,7 +910,6 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [_csPicker setHidden:NO];
     [self csPickerLookInit];
     [_csLabel setHidden:YES];
-    [_quit setHidden:YES];
     currentCS = chordScaleSpace[0];
     currentOctave = octaves[0];
     currentCSTag = 0;
@@ -1052,82 +1042,27 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     } else {
         /* do something if there's another picker view*/
     }
-
+    
 }
 
 #pragma mark - gestures zone
-- (void)tapRecognized:(UITapGestureRecognizer *) sender {
-    [UIView animateWithDuration:0.5 animations:^{_quit.alpha = 0;}];
-    if (sender.numberOfTouchesRequired == 1) {
-        CGPoint lastPoint = [sender locationInView:self.view];
-        if (playEnable) {
-            [self playAtPosX:lastPoint.x Y:lastPoint.y];
-        }
-    } else if (sender.numberOfTouchesRequired == 2) {
-        CGPoint lastPointFirst = [sender locationOfTouch:0 inView:self.view];
-        CGPoint lastPointSecond = [sender locationOfTouch:1 inView:self.view];
-        if (playEnable) {
-            [self playAtPosX:lastPointFirst.x Y:lastPointFirst.y];
-            [self playAtPosX:lastPointSecond.x Y:lastPointSecond.y];
-        }
-    } else if (sender.numberOfTouchesRequired == 3) {
-        CGPoint lastPointFirst = [sender locationOfTouch:0 inView:self.view];
-        CGPoint lastPointSecond = [sender locationOfTouch:1 inView:self.view];
-        CGPoint lastPointThird = [sender locationOfTouch:2 inView:self.view];
-        if (playEnable) {
-            [self playAtPosX:lastPointFirst.x Y:lastPointFirst.y];
-            [self playAtPosX:lastPointSecond.x Y:lastPointSecond.y];
-            [self playAtPosX:lastPointThird.x Y:lastPointThird.y];
-        }
-    } else if (sender.numberOfTouchesRequired == 4) {
-        CGPoint lastPointFirst = [sender locationOfTouch:0 inView:self.view];
-        CGPoint lastPointSecond = [sender locationOfTouch:1 inView:self.view];
-        CGPoint lastPointThird = [sender locationOfTouch:2 inView:self.view];
-        CGPoint lastPointFourth = [sender locationOfTouch:3 inView:self.view];
-        if (playEnable) {
-            [self playAtPosX:lastPointFirst.x Y:lastPointFirst.y];
-            [self playAtPosX:lastPointSecond.x Y:lastPointSecond.y];
-            [self playAtPosX:lastPointThird.x Y:lastPointThird.y];
-            [self playAtPosX:lastPointFourth.x Y:lastPointFourth.y];
+- (void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    if (playEnable && totalCS > 0) {
+        DSLog(@"number of touches : %d", touches.count);
+        for (UITouch *touch in touches) {
+            CGPoint loc = [touch locationInView:self.view];
+            DSLog(@"location %f, %f", loc.x, loc.y);
+            [self playAtPosX:loc.x Y:loc.y];
         }
     }
-    
 }
 
 - (void)swipeRecognized:(UISwipeGestureRecognizer *)sender {
     if (playEnable && totalCS > 0) {
         // FIXME: think of another good mechanism to switch between instruments
         if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
-//            if (currentInstIdx == 0) {
-//                currentInstIdx = (int)_instrumentArray.count - 1;
-//            } else {
-//                currentInstIdx -- ;
-//            }
-//            currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
-//            
-//            if (currentInstrument == SteelGuitar) {
-//                [self changeOctaves:NO];
-//                [self changeOctaves:NO];
-//            } else if (currentInstrument == Piano) {
-//                [self changeOctaves:YES];
-//                [self changeOctaves:YES];
-//            }
             DSLog(@"SwipeRecognized Left");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
-//            if (currentInstIdx == _instrumentArray.count - 1) {
-//                currentInstIdx = 0;
-//            } else {
-//                currentInstIdx ++;
-//            }
-//            currentInstrument = [[_instrumentArray objectAtIndex:currentInstIdx] intValue];
-//            
-//            if (currentInstrument == SteelGuitar) {
-//                [self changeOctaves:NO];
-//                [self changeOctaves:NO];
-//            } else if (currentInstrument == Vibraphone) {
-//                [self changeOctaves:YES];
-//                [self changeOctaves:YES];
-//            }
             DSLog(@"SwipeRecognized Right");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionDown) {
             [self changeOctaves:NO];
@@ -1159,7 +1094,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
             }
         }
     }
-     currentOctave = octaves[currentCSIdx];
+    currentOctave = octaves[currentCSIdx];
     [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
 }
 
