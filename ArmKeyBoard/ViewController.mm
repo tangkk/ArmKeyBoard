@@ -7,7 +7,7 @@
 //
 
 #import "ViewController.h"
-
+#import "PresetController.h"
 // FIXME: can't build under 64 bit x86_64 architecture because opencv library is not built against this.
 // (Opencv2.framework doesn't seem to be supporting iPhone5s(64-bit architecture yet) according to:
 // http://code.opencv.org/projects/opencv/wiki/ChangeLog
@@ -58,6 +58,7 @@ using namespace std;
     bool isOneContour;
     
     // chord-scale things
+    // FIXME: need to add another module to store some preset chord-scale grids
     bool playEnable;
     int currentCSTag;
     int currentCSIdx;
@@ -107,6 +108,12 @@ using namespace std;
 /* CoreMotion */
 @property (strong, nonatomic) CMMotionManager *motionManager;
 @property (strong, nonatomic) NSOperationQueue *queue;
+
+/* Save and Load */
+@property (strong, nonatomic) IBOutlet UIButton *load;
+@property (strong, nonatomic) IBOutlet UIButton *save;
+
+
 
 @end
 
@@ -649,6 +656,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
     [_csPicker setHidden:YES];
     [_csLabel setHidden:YES];
+    [_save setHidden:YES];
+    [_load setHidden:YES];
     
     // Calculate the total chord-scales (only consecutive chord-scale in the space counts)
     playEnable = YES;
@@ -892,7 +901,6 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     } else {
         velocity = 127 - MIN(ABS(gravityY * 127), 127);
     }
-    // FIXME: The C4 note always sounds weired... don't know why (fixed, delete all the 60 related entries of the piano.aupreset)
     MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:currentInstrument velocity:velocity SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
@@ -910,6 +918,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [_csPicker setHidden:NO];
     [self csPickerLookInit];
     [_csLabel setHidden:YES];
+    [_save setHidden:NO];
+    [_load setHidden:NO];
     currentCS = chordScaleSpace[0];
     currentOctave = octaves[0];
     currentCSTag = 0;
@@ -922,7 +932,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 }
 
 /******chord-scale zone ******/
-#pragma mark - chord-scale zone
+#pragma mark - chord-scale button clicker zone
 
 - (IBAction)buttonClicker:(id)sender {
     UIButton *button = (UIButton *)sender;
@@ -1099,8 +1109,100 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 }
 
 #pragma mark - backing zone
+
 - (void)directoryDidChange:(DirectoryWatcher *)folderWatcher {
     
+}
+
+#pragma mark - preset save and load zone
+
+- (void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.identifier  isEqualToString: @"showCSPresets"]) {
+        PresetController *presetViewController = (PresetController *)[segue destinationViewController];
+        presetViewController.delegate = self;
+    }
+}
+
+- (void) getPresets:(NSMutableDictionary *)presets from:(PresetController *)controller atRow:(int)row{
+    DSLog(@"presetController delegate called with row %d selected", row);
+    [controller dismissViewControllerAnimated:YES completion:nil];
+    /****** refresh the chord-scale grid ******/
+    if (row >= 0 && row < [presets allKeys].count) {
+        NSString *key = [[presets allKeys] objectAtIndex:row];
+        NSArray *selectedPreset = [presets objectForKey:key];
+        for (int i = 0; i < selectedPreset.count; i++) {
+            NSArray *arr = [selectedPreset objectAtIndex:i];
+            int chordInt = [[arr objectAtIndex:0] intValue];
+            int octInt = [[arr objectAtIndex:1] intValue];
+            int scaleInt = [[arr objectAtIndex:2] intValue];
+            DSLog(@"%d, %d, %d", chordInt, octInt, scaleInt);
+            chordScaleIntSpace[i].first = chordInt;
+            octavesInt[i] = octInt;
+            chordScaleIntSpace[i].second = scaleInt;
+            chordScaleSpace[i].first = [_chordRootArray objectAtIndex:chordInt];
+            octaves[i] = [_octaveArray objectAtIndex:octInt];
+            chordScaleSpace[i].second = [_scaleArray objectAtIndex:scaleInt];
+            
+            if (chordInt == 0 || scaleInt == 0) {
+                UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:i];
+                [button setBackgroundImage:_buttonUnClickedImg forState:UIControlStateNormal];
+            } else {
+                UIButton *button = (UIButton *)[_csButtonGrid objectAtIndex:i];
+                [button setBackgroundImage:_buttonClickedImg forState:UIControlStateNormal];
+                button.alpha = 1;
+            }
+        }
+        currentCS = chordScaleSpace[0];
+        currentOctave = octaves[0];
+        currentCSTag = 0;
+        currentInstIdx = 0;
+        lastCSTag = 0;
+        currentCSIdx = 0;
+    }
+}
+
+- (IBAction)save:(id)sender {
+    UIAlertView * alert = [[UIAlertView alloc] initWithTitle:@"name your preset" message:@"save preset as:" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
+    alert.alertViewStyle = UIAlertViewStylePlainTextInput;
+    [alert show];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if (buttonIndex == 1) {
+        NSLog(@"Entered: %@",[[alertView textFieldAtIndex:0] text]);
+        NSString *error;
+        NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+                                                                  NSUserDomainMask, YES) objectAtIndex:0];
+        NSMutableArray *chordOctScale = [[NSMutableArray alloc] init];
+        for (int i = 0; i < octavesInt.size(); i++) {
+            int chordInt = chordScaleIntSpace[i].first;
+            int octInt = octavesInt[i];
+            int scaleInt = chordScaleIntSpace[i].second;
+            NSArray *arr = @[[NSNumber numberWithInt:chordInt], [NSNumber numberWithInt:octInt], [NSNumber numberWithInt:scaleInt]];
+            [chordOctScale addObject:arr];
+        }
+        NSString *presetName = [[alertView textFieldAtIndex:0] text];
+        NSDictionary *newData = @{presetName : chordOctScale};
+        NSString *plistPath = [rootPath stringByAppendingPathComponent:@"Preset.plist"];
+        NSDictionary *oldData = [NSDictionary dictionaryWithContentsOfFile:plistPath];
+        
+        NSMutableDictionary *data;
+        if (oldData !=nil) {
+            data = [[NSMutableDictionary alloc] initWithDictionary:oldData];
+            [data addEntriesFromDictionary:newData];
+        } else {
+            data = [[NSMutableDictionary alloc] initWithDictionary:newData];
+        }
+        
+        NSData *plistData = [NSPropertyListSerialization dataFromPropertyList: data
+                                                                       format:NSPropertyListXMLFormat_v1_0 errorDescription:&error];
+        if(plistData) {
+            [plistData writeToFile:plistPath atomically:YES];
+        }
+        else {
+            NSLog(@"Error : %@",error);
+        }
+    }
 }
 
 

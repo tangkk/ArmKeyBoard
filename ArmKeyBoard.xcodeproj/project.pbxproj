@@ -27,6 +27,9 @@
 		9078F35B1839B20C00EA23F5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9078F35A1839B20C00EA23F5 /* AVFoundation.framework */; };
 		9078F9181839B2E300EA23F5 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 9078F9171839B2E300EA23F5 /* Sounds */; };
 		9078F9191839B2E300EA23F5 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 9078F9171839B2E300EA23F5 /* Sounds */; };
+		90831E391862D252006D1ECC /* Triangle_180.png in Resources */ = {isa = PBXBuildFile; fileRef = 90831E381862D252006D1ECC /* Triangle_180.png */; };
+		90831E3B1862D259006D1ECC /* Triangle.png in Resources */ = {isa = PBXBuildFile; fileRef = 90831E3A1862D259006D1ECC /* Triangle.png */; };
+		90831E3E1862DCEC006D1ECC /* PresetController.m in Sources */ = {isa = PBXBuildFile; fileRef = 90831E3D1862DCEC006D1ECC /* PresetController.m */; };
 		9096A0D5185AE918004971FF /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9096A0D4185AE918004971FF /* CoreMotion.framework */; };
 		9096A0DB185B0B7F004971FF /* DirectoryWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 9096A0DA185B0B7F004971FF /* DirectoryWatcher.m */; };
 		90DFA4FB181B56BC00145DB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FA181B56BC00145DB9 /* Foundation.framework */; };
@@ -77,6 +80,10 @@
 		9078F3581839B20500EA23F5 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		9078F35A1839B20C00EA23F5 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		9078F9171839B2E300EA23F5 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = SOURCE_ROOT; };
+		90831E381862D252006D1ECC /* Triangle_180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Triangle_180.png; sourceTree = "<group>"; };
+		90831E3A1862D259006D1ECC /* Triangle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Triangle.png; sourceTree = "<group>"; };
+		90831E3C1862DCEC006D1ECC /* PresetController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PresetController.h; sourceTree = "<group>"; };
+		90831E3D1862DCEC006D1ECC /* PresetController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PresetController.m; sourceTree = "<group>"; };
 		9096A0D4185AE918004971FF /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		9096A0D9185B0B7F004971FF /* DirectoryWatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirectoryWatcher.h; sourceTree = "<group>"; };
 		9096A0DA185B0B7F004971FF /* DirectoryWatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectoryWatcher.m; sourceTree = "<group>"; };
@@ -183,6 +190,8 @@
 				90DFA50F181B56BC00145DB9 /* Main_iPad.storyboard */,
 				90DFA512181B56BC00145DB9 /* ViewController.h */,
 				90DFA513181B56BC00145DB9 /* ViewController.mm */,
+				90831E3C1862DCEC006D1ECC /* PresetController.h */,
+				90831E3D1862DCEC006D1ECC /* PresetController.m */,
 				9078F34A1839B1DA00EA23F5 /* MIDINote.h */,
 				9078F34B1839B1DA00EA23F5 /* MIDINote.m */,
 				9078F34C1839B1DA00EA23F5 /* NoteNumDict.h */,
@@ -202,6 +211,8 @@
 		90DFA501181B56BC00145DB9 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				90831E3A1862D259006D1ECC /* Triangle.png */,
+				90831E381862D252006D1ECC /* Triangle_180.png */,
 				904BA6FF185807D000FBA6EE /* Chord-Scale-white.png */,
 				904BA700185807D000FBA6EE /* Chord-Scale.png */,
 				90DFA502181B56BC00145DB9 /* ArmKeyBoard-Info.plist */,
@@ -317,7 +328,9 @@
 				90779062185E9999004B7E35 /* SteelGuitar.aupreset in Resources */,
 				90779063185E9999004B7E35 /* Trombone.aupreset in Resources */,
 				90779066185E9BD8004B7E35 /* Guitar.aupreset in Resources */,
+				90831E391862D252006D1ECC /* Triangle_180.png in Resources */,
 				904BA702185807D000FBA6EE /* Chord-Scale.png in Resources */,
+				90831E3B1862D259006D1ECC /* Triangle.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,6 +354,7 @@
 				9078F3521839B1DA00EA23F5 /* MIDINote.m in Sources */,
 				90DFA514181B56BC00145DB9 /* ViewController.mm in Sources */,
 				9078F3561839B1DA00EA23F5 /* VirtualInstrument.m in Sources */,
+				90831E3E1862DCEC006D1ECC /* PresetController.m in Sources */,
 				90DFA50B181B56BC00145DB9 /* AppDelegate.m in Sources */,
 				9078C6EE18543B3B00E39CB4 /* HierarchicalScale.m in Sources */,
 				9078F3541839B1DA00EA23F5 /* NoteNumDict.m in Sources */,

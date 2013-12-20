@@ -8,7 +8,8 @@
 
 #import <UIKit/UIKit.h>
 #import "DirectoryWatcher.h"
+#import "PresetController.h"
 
-@interface ViewController : UIViewController <UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPickerViewDataSource, UIPickerViewDelegate,DirectoryWatcherDelegate, UIGestureRecognizerDelegate>
+@interface ViewController : UIViewController <UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPickerViewDataSource, UIPickerViewDelegate,DirectoryWatcherDelegate, UIGestureRecognizerDelegate, PresetControllerDelegate>
 
 @end
