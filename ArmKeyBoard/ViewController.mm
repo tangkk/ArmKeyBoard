@@ -56,6 +56,7 @@ using namespace std;
     double imagesize, screensize;
     double RPN15, RPN17;                    // region per note for 15 note scale or 17 note scale
     bool isOneContour;
+    UIImageOrientation imageOrientation;
     
     // chord-scale things
     // FIXME: need to add another module to store some preset chord-scale grids
@@ -327,8 +328,15 @@ using namespace std;
 - (cv::Mat)cvMatFromUIImage:(UIImage *)image
 {
     CGColorSpaceRef colorSpace = CGImageGetColorSpace(image.CGImage);
-    CGFloat cols = image.size.width;
-    CGFloat rows = image.size.height;
+    CGFloat cols, rows;
+    // Check the orientation of the image. If it's portrait, transpose the cols and rows
+    if (imageOrientation == UIImageOrientationLeft || imageOrientation == UIImageOrientationRight) {
+        cols = image.size.height;
+        rows = image.size.width;
+    } else {
+        cols = image.size.width;
+        rows = image.size.height;
+    }
     
     cv::Mat cvMat(rows, cols, CV_8UC4); // 8 bits per component, 4 channels
     
@@ -345,6 +353,7 @@ using namespace std;
     CGContextRelease(contextRef);
     CGColorSpaceRelease(colorSpace);
     
+    NSLog(@"cvMat cols: %d, rows: %d", cvMat.cols, cvMat.rows);
     return cvMat;
 }
 
@@ -377,7 +386,7 @@ using namespace std;
     
     
     // Getting UIImage from CGImage
-    UIImage *finalImage = [UIImage imageWithCGImage:imageRef];
+    UIImage *finalImage = [UIImage imageWithCGImage:imageRef scale:1 orientation:imageOrientation];
     CGImageRelease(imageRef);
     CGDataProviderRelease(provider);
     CGColorSpaceRelease(colorSpace);
@@ -647,6 +656,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
 }
 
 - (UIImage *) opencvImageProcessing:(UIImage *) SrcImg {
+    //FIXME: the return image sometimes show the wrong orientation thus leads to segmentation fault when playing it (because array out of index)
     srcMat = [self cvMatFromUIImage:SrcImg];
     cv::Mat src_gray;
     cv::Mat mix;
@@ -722,16 +732,26 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         widthRatio = selectedImage.size.width / self.view.frame.size.width;
         heightRatio = selectedImage.size.height / self.view.frame.size.height;
         distRatio = sqrt(widthRatio*widthRatio + heightRatio*heightRatio);
-        DSLog(@"image size x = %f, y = %f, size = %f", selectedImage.size.width, selectedImage.size.height, imagesize);
-        DSLog(@"screen size x = %f, y = %f, size = %f", self.view.frame.size.width, self.view.frame.size.height, screensize);
-        DSLog(@"widthRatio = %f, heightRation = %f, distRation = %f", widthRatio, heightRatio, distRatio);
+        NSLog(@"image size x = %f, y = %f, size = %f", selectedImage.size.width, selectedImage.size.height, imagesize);
+        NSLog(@"screen size x = %f, y = %f, size = %f", self.view.frame.size.width, self.view.frame.size.height, screensize);
+        NSLog(@"widthRatio = %f, heightRatio = %f, distRatio = %f", widthRatio, heightRatio, distRatio);
+        if (widthRatio == heightRatio /*|| fmod(widthRatio, 2) != 0 || fmod(heightRatio, 2) != 0*/) {
+            // Do Image processing using opencv
+            imageOrientation = selectedImage.imageOrientation;
+            
+            //FIXME: whether to show the original image or the mixed image?
+            //_mainImage.image = [self opencvImageProcessing:selectedImage];
+            [self opencvImageProcessing:selectedImage];
+            _mainImage.image = selectedImage;
+            [self.view bringSubviewToFront:_mainImage];
+            
+            // Perform the algorithm on to the contours to produce the region-scale mapping
+            [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+        } else {
+            [self imagePickerControllerDidCancel:picker];
+            return;
+        }
         
-        // Do Image processing using opencv
-        _mainImage.image = [self opencvImageProcessing:selectedImage];
-        [self.view bringSubviewToFront:_mainImage];
-        
-        // Perform the algorithm on to the contours to produce the region-scale mapping
-        [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
     }
     [picker dismissViewControllerAnimated:YES completion:nil];
 }
@@ -894,6 +914,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     // RGB value
     int Red = 0, Green = 0, Blue = 0;
     if (srcMat.rows > 0) {
+        NSLog(@"srcMat cols: %d, rows: %d", srcMat.cols, srcMat.rows);
+        NSLog(@"scaleX: %d, scale Y: %d", scaleX, scaleY);
         Red = srcMat.at<cv::Vec4b>(scaleX, scaleY)[0];
         Green = srcMat.at<cv::Vec4b>(scaleX, scaleY)[1];
         Blue = srcMat.at<cv::Vec4b>(scaleX, scaleY)[2];
@@ -907,14 +929,14 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
         if(dist > 0) {
             dist /= distRatio;
-            DSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
+            NSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
             isInside = true;
             contourNum = contourmark[i];
         }
     }
     
     if (! isInside) {
-        DSLog(@"The current pos is in contour -1");
+        NSLog(@"The current pos is in contour -1");
         contourNum = -1;
     }
     DSLog(@"current pos x = %d, y = %d, contourNum = %d", x, y, contourNum);
