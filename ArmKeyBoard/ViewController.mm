@@ -73,9 +73,11 @@ using namespace std;
     vector<NSString *> octaves;
     vector<int> octavesInt;
     
-    // gravity readings
+    // CM motion readings
     float gravityX, gravityY, gravityZ;
+    float accelX, accelY, accelZ;
     bool gravityGuard;
+    bool accelGuard;
 }
 /* Gesture things and views*/
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
@@ -217,17 +219,28 @@ using namespace std;
 
 - (void) coreMotionSetup {
     _motionManager = [[CMMotionManager alloc] init];
-    _motionManager.accelerometerUpdateInterval = 0.1;
+    _motionManager.deviceMotionUpdateInterval = 0.1;
     gravityGuard = false;
-    if (_motionManager.accelerometerAvailable) {
+    accelGuard = false;
+    if (_motionManager.deviceMotionAvailable) {
         _queue = [NSOperationQueue currentQueue];
-        [_motionManager startAccelerometerUpdatesToQueue:_queue withHandler:^(CMAccelerometerData *accelerometerData, NSError *error) {
-            CMAcceleration acceleration = accelerometerData.acceleration;
-            gravityX = acceleration.x;
-            gravityY = acceleration.y;
-            gravityZ = acceleration.z;
+        [_motionManager startDeviceMotionUpdatesToQueue:_queue withHandler:^(CMDeviceMotion *motionData, NSError *error) {
+            //FIXME: how to make good use of other CMMotion data?
+            //CMAttitude *attitude = motionData.attitude;
+            CMAcceleration gravity = motionData.gravity;
+            CMAcceleration userAcceleration = motionData.userAcceleration;
+            //CMRotationRate rotate = motionData.rotationRate;
+            //CMCalibratedMagneticField field = motionData.magneticField;
             
-            DSLog(@"gravityX: %f, gravityZ: %f", gravityX, gravityZ);
+            gravityX = gravity.x;
+            gravityY = gravity.y;
+            gravityZ = gravity.z;
+            accelX = userAcceleration.x;
+            accelY = userAcceleration.y;
+            accelZ = userAcceleration.z;
+            
+            DSLog(@"gravityX: %f, gravityY: %f, gravityZ: %f", gravityX, gravityY, gravityZ);
+            DSLog(@"accelX: %f, accelY: %f, accelZ: %f", accelX, accelY, accelZ);
             
             // flip the page if abs x is larger than a certain number
             if (!gravityGuard) {
@@ -264,9 +277,26 @@ using namespace std;
                 gravityGuard = false;
             }
             
+            if (playEnable && totalCS > 0 && !accelGuard) {
+                if (accelZ > 0.8) {
+                    [self changeOctaves:YES];
+                    accelGuard = true;
+                }
+                
+                if (accelZ < -0.8) {
+                    [self changeOctaves:NO];
+                    accelGuard = true;
+                }
+            }
+            
+            if (accelZ > -0.2 && accelZ < 0.2) {
+                accelGuard = false;
+            }
+            
             if (gravityZ > 0.9) {
                 [self quit];
             }
+            
         }];
     }
 }
