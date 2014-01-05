@@ -420,7 +420,7 @@ using namespace std;
     CGContextRelease(contextRef);
     CGColorSpaceRelease(colorSpace);
     
-    NSLog(@"cvMat cols: %d, rows: %d", cvMat.cols, cvMat.rows);
+    DSLog(@"cvMat cols: %d, rows: %d", cvMat.cols, cvMat.rows);
     return cvMat;
 }
 
@@ -810,9 +810,9 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         widthRatio = selectedImage.size.width / self.view.frame.size.width;
         heightRatio = selectedImage.size.height / self.view.frame.size.height;
         distRatio = sqrt(widthRatio*widthRatio + heightRatio*heightRatio);
-        NSLog(@"image size x = %f, y = %f, size = %f", selectedImage.size.width, selectedImage.size.height, imagesize);
-        NSLog(@"screen size x = %f, y = %f, size = %f", self.view.frame.size.width, self.view.frame.size.height, screensize);
-        NSLog(@"widthRatio = %f, heightRatio = %f, distRatio = %f", widthRatio, heightRatio, distRatio);
+        DSLog(@"image size x = %f, y = %f, size = %f", selectedImage.size.width, selectedImage.size.height, imagesize);
+        DSLog(@"screen size x = %f, y = %f, size = %f", self.view.frame.size.width, self.view.frame.size.height, screensize);
+        DSLog(@"widthRatio = %f, heightRatio = %f, distRatio = %f", widthRatio, heightRatio, distRatio);
         // Limit the user to choose only the images that is similar to the iPhone screen
         if (widthRatio == heightRatio /*|| fmod(widthRatio, 2) != 0 || fmod(heightRatio, 2) != 0*/) {
             // Do Image processing using opencv
@@ -1002,8 +1002,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     } else {
         
         if (srcMat.rows > 0) {
-            NSLog(@"srcMat cols: %d, rows: %d", srcMat.cols, srcMat.rows);
-            NSLog(@"scaleX: %d, scale Y: %d", scaleX, scaleY);
+            DSLog(@"srcMat cols: %d, rows: %d", srcMat.cols, srcMat.rows);
+            DSLog(@"scaleX: %d, scale Y: %d", scaleX, scaleY);
             Red = srcMat.at<cv::Vec4b>(scaleX, scaleY)[0];
             Green = srcMat.at<cv::Vec4b>(scaleX, scaleY)[1];
             Blue = srcMat.at<cv::Vec4b>(scaleX, scaleY)[2];
@@ -1017,14 +1017,14 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
             dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
             if(dist > 0) {
                 dist /= distRatio;
-                NSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
+                DSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
                 isInside = true;
                 contourNum = contourmark[i];
             }
         }
         
         if (! isInside) {
-            NSLog(@"The current pos is in contour -1");
+            DSLog(@"The current pos is in contour -1");
             contourNum = -1;
         }
         DSLog(@"current pos x = %d, y = %d, contourNum = %d", x, y, contourNum);
@@ -1309,7 +1309,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
     if (buttonIndex == 1) {
-        NSLog(@"Entered: %@",[[alertView textFieldAtIndex:0] text]);
+        DSLog(@"Entered: %@",[[alertView textFieldAtIndex:0] text]);
         NSString *error;
         NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                                                   NSUserDomainMask, YES) objectAtIndex:0];
@@ -1340,7 +1340,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
             [plistData writeToFile:plistPath atomically:YES];
         }
         else {
-            NSLog(@"Error : %@",error);
+            DSLog(@"Error : %@",error);
         }
     }
 }
@@ -1407,6 +1407,11 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
         animate[i] = NO;
         notePosReg[i] = 0;
     }
+}
+
+#pragma mark - helper
+- (BOOL)prefersStatusBarHidden {
+    return YES;
 }
 
 @end
