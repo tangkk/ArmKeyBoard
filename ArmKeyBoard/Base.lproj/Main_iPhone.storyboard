@@ -562,10 +562,19 @@
                                     <action selector="save:" destination="vXZ-lx-hvc" eventType="touchUpInside" id="f3x-qB-fDH"/>
                                 </connections>
                             </button>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="RdB-gD-KvZ">
+                                <rect key="frame" x="111" y="428" width="99" height="29"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <segments>
+                                    <segment title="AKB1"/>
+                                    <segment title="AKB2"/>
+                                </segments>
+                            </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <connections>
+                        <outlet property="AKBType" destination="RdB-gD-KvZ" id="kvz-Fh-BG1"/>
                         <outlet property="chooseImage" destination="gdB-3H-Ghh" id="qzC-Yz-3P8"/>
                         <outlet property="csLabel" destination="W4Z-4Z-f9E" id="00Y-EF-0nt"/>
                         <outlet property="csPicker" destination="mfc-06-J8z" id="scu-Sq-rfJ"/>
@@ -696,6 +705,7 @@
         <image name="Triangle.png" width="50" height="50"/>
         <image name="Triangle_180.png" width="50" height="50"/>
     </resources>
+    <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <simulatedStatusBarMetrics key="statusBar"/>
         <simulatedOrientationMetrics key="orientation"/>

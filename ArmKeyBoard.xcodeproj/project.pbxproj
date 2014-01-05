@@ -32,6 +32,8 @@
 		90969D84186C1E8D00B5A8B1 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90969D83186C1E8D00B5A8B1 /* opencv2.framework */; };
 		9096A0D5185AE918004971FF /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9096A0D4185AE918004971FF /* CoreMotion.framework */; };
 		9096A0DB185B0B7F004971FF /* DirectoryWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 9096A0DA185B0B7F004971FF /* DirectoryWatcher.m */; };
+		90A4A095187918540088321B /* Drawing.m in Sources */ = {isa = PBXBuildFile; fileRef = 90A4A094187918540088321B /* Drawing.m */; };
+		90A506021878311F00D0E6A6 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90A506011878311F00D0E6A6 /* QuartzCore.framework */; };
 		90DFA4FB181B56BC00145DB9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FA181B56BC00145DB9 /* Foundation.framework */; };
 		90DFA4FD181B56BC00145DB9 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FC181B56BC00145DB9 /* CoreGraphics.framework */; };
 		90DFA4FF181B56BC00145DB9 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90DFA4FE181B56BC00145DB9 /* UIKit.framework */; };
@@ -87,6 +89,9 @@
 		9096A0D4185AE918004971FF /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		9096A0D9185B0B7F004971FF /* DirectoryWatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirectoryWatcher.h; sourceTree = "<group>"; };
 		9096A0DA185B0B7F004971FF /* DirectoryWatcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectoryWatcher.m; sourceTree = "<group>"; };
+		90A4A093187918540088321B /* Drawing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Drawing.h; sourceTree = "<group>"; };
+		90A4A094187918540088321B /* Drawing.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Drawing.m; sourceTree = "<group>"; };
+		90A506011878311F00D0E6A6 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		90AD19A3185EBF9000F935BE /* Definition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Definition.h; sourceTree = "<group>"; };
 		90DFA4F7181B56BC00145DB9 /* ArmKeyBoard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArmKeyBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		90DFA4FA181B56BC00145DB9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -115,6 +120,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				90A506021878311F00D0E6A6 /* QuartzCore.framework in Frameworks */,
 				90969D84186C1E8D00B5A8B1 /* opencv2.framework in Frameworks */,
 				9096A0D5185AE918004971FF /* CoreMotion.framework in Frameworks */,
 				9078F35B1839B20C00EA23F5 /* AVFoundation.framework in Frameworks */,
@@ -167,6 +173,7 @@
 		90DFA4F9181B56BC00145DB9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				90A506011878311F00D0E6A6 /* QuartzCore.framework */,
 				90969D83186C1E8D00B5A8B1 /* opencv2.framework */,
 				9096A0D4185AE918004971FF /* CoreMotion.framework */,
 				9078F35A1839B20C00EA23F5 /* AVFoundation.framework */,
@@ -194,6 +201,8 @@
 				90831E3D1862DCEC006D1ECC /* PresetController.m */,
 				9078F34A1839B1DA00EA23F5 /* MIDINote.h */,
 				9078F34B1839B1DA00EA23F5 /* MIDINote.m */,
+				90A4A093187918540088321B /* Drawing.h */,
+				90A4A094187918540088321B /* Drawing.m */,
 				9078F34C1839B1DA00EA23F5 /* NoteNumDict.h */,
 				9078F34D1839B1DA00EA23F5 /* NoteNumDict.m */,
 				9096A0D9185B0B7F004971FF /* DirectoryWatcher.h */,
@@ -359,6 +368,7 @@
 				9078F3561839B1DA00EA23F5 /* VirtualInstrument.m in Sources */,
 				90831E3E1862DCEC006D1ECC /* PresetController.m in Sources */,
 				90DFA50B181B56BC00145DB9 /* AppDelegate.m in Sources */,
+				90A4A095187918540088321B /* Drawing.m in Sources */,
 				9078C6EE18543B3B00E39CB4 /* HierarchicalScale.m in Sources */,
 				9078F3541839B1DA00EA23F5 /* NoteNumDict.m in Sources */,
 				90DFA507181B56BC00145DB9 /* main.m in Sources */,

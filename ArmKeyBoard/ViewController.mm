@@ -13,6 +13,7 @@
 // http://code.opencv.org/projects/opencv/wiki/ChangeLog
 
 #import "Definition.h"
+#import "Drawing.h"
 
 // Import the graphics infrastructure
 #import <MobileCoreServices/UTCoreTypes.h>
@@ -40,6 +41,8 @@
 using namespace std;
 
 @interface ViewController () {
+#pragma mark - priviate vars
+    /* opencv */
     int thresh ;
     int contourmin;
     double outerarea;                   // The imagesize excluding all the counted contour areas
@@ -49,7 +52,7 @@ using namespace std;
     vector<cv::Vec4i> hierarchy;
     map<int, vector<int> > region2scale;        // This is the very map between region and scale
     
-    // Image : Screen Ratio
+    /* Image : Screen Ratio */
     float widthRatio;
     float heightRatio;
     float distRatio;
@@ -58,7 +61,8 @@ using namespace std;
     bool isOneContour;
     UIImageOrientation imageOrientation;
     
-    // chord-scale things
+    
+    /* chord-scale things */
     // FIXME: need to add another module to store some preset chord-scale grids
     bool playEnable;
     int currentCSTag;
@@ -74,12 +78,29 @@ using namespace std;
     vector<NSString *> octaves;
     vector<int> octavesInt;
     
-    // CM motion readings
+    /* CM motion readings */
     float gravityX, gravityY, gravityZ;
     float accelX, accelY, accelZ;
     bool gravityGuard;
     bool accelGuard;
+    
+    /* Animation*/
+    CGFloat mouseXReg[AnimateArrayLength];
+    CGFloat mouseYReg[AnimateArrayLength];
+    UInt16 tick[AnimateArrayLength];
+    BOOL animate[AnimateArrayLength];
+    UInt16 notePos;
+    UInt16 notePosReg[AnimateArrayLength];
+    UInt8 velPos;
+    CGFloat brush;
+    CGFloat opacity;
+    CGFloat red;
+    CGFloat green;
+    CGFloat blue;
+    CGFloat width;
+    CGFloat height;
 }
+
 /* Gesture things and views*/
 @property (strong, nonatomic) IBOutlet UIImageView *mainImage;
 @property (strong, nonatomic) IBOutlet UIButton *chooseImage;
@@ -116,7 +137,11 @@ using namespace std;
 @property (strong, nonatomic) IBOutlet UIButton *load;
 @property (strong, nonatomic) IBOutlet UIButton *save;
 
+/* Keyboard Type Selection */
+@property (strong, nonatomic) IBOutlet UISegmentedControl *AKBType;
 
+/* Animation */
+@property (nonatomic, retain) NSTimer *draw;
 
 @end
 
@@ -131,7 +156,8 @@ using namespace std;
     [self gesturesSetup];
     [self chordScaleGridSetup];
     [self coreMotionSetup];
-    
+    [self otherSetup];
+    [self animationSetup];
 }
 
 - (void) viewWillAppear:(BOOL)animated {
@@ -280,12 +306,12 @@ using namespace std;
             
             if (playEnable && totalCS > 0 && !accelGuard) {
                 if (accelZ > 0.8) {
-                    [self changeOctaves:YES];
+                    //[self changeOctaves:YES];
                     accelGuard = true;
                 }
                 
                 if (accelZ < -0.8) {
-                    [self changeOctaves:NO];
+                    //[self changeOctaves:NO];
                     accelGuard = true;
                 }
             }
@@ -321,6 +347,24 @@ using namespace std;
         _HS = [[HierarchicalScale alloc] init];
     }
     
+}
+
+- (void) animationSetup {
+    red = 255.0/255.0;
+    green = 255.0/255.0;
+    blue = 255.0/255.0;
+    brush = 1.0;
+    opacity = 1.0;
+    notePos = 0;
+    width = self.view.frame.size.width;
+    height = self.view.frame.size.height;
+    [_draw invalidate];
+    [self.mainImage setAlpha:opacity];
+    [self clearAnimationArrays];
+}
+
+- (void) otherSetup {
+    _AKBType.tintColor = [UIColor whiteColor];
 }
 
 #pragma mark - opencv zone
@@ -698,6 +742,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     [_csLabel setHidden:YES];
     [_save setHidden:YES];
     [_load setHidden:YES];
+    [_AKBType setHidden:YES];
     
     // Calculate the total chord-scales (only consecutive chord-scale in the space counts)
     playEnable = YES;
@@ -711,7 +756,15 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     }
     DSLog(@"totalCS: %d", totalCS);
     
-    [self startMediaBrowserFromViewController:self usingDelegate:self];
+    if (_AKBType.selectedSegmentIndex == 0) {
+        // Type 1 keyboard, go directly into the mapping
+        [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+        _draw = [NSTimer scheduledTimerWithTimeInterval:0.03 target:self selector:@selector(processingDraw) userInfo:nil repeats:YES];
+    } else {
+        // Type 2 keyboard, go to the image selection and then mapping
+        [self startMediaBrowserFromViewController:self usingDelegate:self];
+        [_draw invalidate];
+    }
 }
 
 /****** delegate for the pick controller media browser ******/
@@ -735,6 +788,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         NSLog(@"image size x = %f, y = %f, size = %f", selectedImage.size.width, selectedImage.size.height, imagesize);
         NSLog(@"screen size x = %f, y = %f, size = %f", self.view.frame.size.width, self.view.frame.size.height, screensize);
         NSLog(@"widthRatio = %f, heightRatio = %f, distRatio = %f", widthRatio, heightRatio, distRatio);
+        // Limit the user to choose only the images that is similar to the iPhone screen
         if (widthRatio == heightRatio /*|| fmod(widthRatio, 2) != 0 || fmod(heightRatio, 2) != 0*/) {
             // Do Image processing using opencv
             imageOrientation = selectedImage.imageOrientation;
@@ -806,10 +860,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     [UIView animateWithDuration:1 animations:^{_csLabel.alpha = 0.5;}];
     [UIView animateWithDuration:1 animations:^{_csLabel.alpha = 0.0;}];
     
-    // FIXME: if there's only one contour, make it linear layout like the original WIJAM keyboard(because there's no need to distributed layout anymore)
-    // and make also some lines to separate the keyboard. And at the same time sort the hierarchical scale also.
     region2scale.clear();
-    if (isOneContour) {
+    if (_AKBType.selectedSegmentIndex == 0) {
         vector<int> notes;
         NSArray *scale = [_HS getScale:scaleName];
         for (int j = 0; j < scale.count; j++) {
@@ -944,11 +996,11 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     
     // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space
     if (noteset.size() > 0) {
-        noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset, isOneContour, self.view.frame.size.height);
+        noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset, _AKBType.selectedSegmentIndex == 0, self.view.frame.size.height);
     }
     
     int velocity;
-    if (isOneContour) {
+    if (_AKBType.selectedSegmentIndex == 0) {
         velocity = MIN((x * 127 / self.view.frame.size.width), 127);
     } else {
         velocity = 127 - MIN(ABS(gravityY * 127), 127);
@@ -972,6 +1024,8 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     [_csLabel setHidden:YES];
     [_save setHidden:NO];
     [_load setHidden:NO];
+    [_AKBType setHidden:NO];
+    [_draw invalidate];
     currentCS = chordScaleSpace[0];
     currentOctave = octaves[0];
     currentCSTag = 0;
@@ -1115,6 +1169,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
             CGPoint loc = [touch locationInView:self.view];
             DSLog(@"location %f, %f", loc.x, loc.y);
             [self playAtPosX:loc.x Y:loc.y];
+            [self tracePressedwithPos:loc.x andPos:loc.y notePos:loc.y*noteSize / height];
         }
     }
 }
@@ -1257,5 +1312,74 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     }
 }
 
+#pragma mark - animation zone
+
+/***** This process is called once per 0.03 second to simulate the "processing"'s style http://www.processing.org of drawing ability ******/
+- (void)processingDraw {
+    [self doAnimation];
+}
+
+// This is a result of my processing simulation
+- (void) doAnimation {
+    // do some fading effect
+    [self fading];
+    
+    // do water effect
+    for (int i = 0; i < AnimateArrayLength; i++) {
+        if (animate[i]) {
+            tick[i]++;
+            if (tick[i] > 45) {
+                tick[i] = 0;
+                animate[i] = false;
+            }
+            if (tick[i] > 30 && tick[i] <=45) {
+                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:2*(notePosReg[i]+2) onImage:self.mainImage withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
+            }
+            if (tick[i] > 15 && tick[i] <= 30) {
+                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:1.5*(notePosReg[i]+2) onImage:self.mainImage withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
+            }
+            if (tick[i] > 1 && tick[i] <= 15) {
+                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:(notePosReg[i]+2) onImage:self.mainImage withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
+            }
+        }
+    }
+}
+
+- (void) fading {
+    UIGraphicsBeginImageContext(self.view.frame.size);
+    [self.mainImage.image drawInRect:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height) blendMode:kCGBlendModeNormal alpha:1.0];
+    CGContextSetRGBFillColor(UIGraphicsGetCurrentContext(), 0, 0, 0, 0.1);
+    CGContextFillRect(UIGraphicsGetCurrentContext(), CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height));
+    CGContextStrokePath(UIGraphicsGetCurrentContext());
+    CGContextFlush(UIGraphicsGetCurrentContext());
+    self.mainImage.image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+}
+
+- (void) tracePressedwithPos:(CGFloat)x andPos:(CGFloat)y notePos:(UInt16)Pos {
+    for (int i = 1; i < AnimateArrayLength; i++) {
+        mouseXReg[i-1] = mouseXReg[i];
+        mouseYReg[i-1] = mouseYReg[i];
+        tick[i-1] = tick[i];
+        animate[i-1] = animate[i];
+        notePosReg[i - 1] = notePosReg[i];
+    }
+    mouseXReg[AnimateArrayLength - 1] = x;
+    mouseYReg[AnimateArrayLength - 1] = y;
+    tick[AnimateArrayLength - 1] = 0;
+    animate[AnimateArrayLength - 1] = YES;
+    notePosReg[AnimateArrayLength - 1] = Pos;
+    
+}
+
+- (void) clearAnimationArrays {
+    for (int i = 0; i < AnimateArrayLength; i++) {
+        mouseXReg[i] = 0;
+        mouseYReg[i] = 0;
+        tick[i] = 0;
+        animate[i] = NO;
+        notePosReg[i] = 0;
+    }
+}
 
 @end

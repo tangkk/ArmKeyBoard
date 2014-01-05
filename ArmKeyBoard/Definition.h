@@ -6,6 +6,9 @@
 //  Copyright (c) 2013 tangkk. All rights reserved.
 //
 
+#define AnimateArrayLength 10
+#define RegLength 5
+#define noteSize 15
 
 //#define TEST
 
