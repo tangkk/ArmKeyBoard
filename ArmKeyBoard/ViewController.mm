@@ -12,8 +12,6 @@
 // (Opencv2.framework doesn't seem to be supporting iPhone5s(64-bit architecture yet) according to:
 // http://code.opencv.org/projects/opencv/wiki/ChangeLog
 
-// FIXME: should disable the dragdown and dragup menu by iOS 7.
-
 #import "Definition.h"
 #import "Drawing.h"
 
@@ -41,8 +39,6 @@
 // Opencv configuration
 //#define CANNY
 
-// FIXME: still need to add some drawing functionalities in the future
-
 using namespace std;
 
 @interface ViewController () {
@@ -68,7 +64,6 @@ using namespace std;
     
     
     /* chord-scale things */
-    // FIXME: need to add another module to store some preset chord-scale grids
     bool playEnable;
     int currentCSTag;
     int currentCSIdx;
@@ -1209,7 +1204,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 - (void)swipeRecognized:(UISwipeGestureRecognizer *)sender {
     if (playEnable && totalCS > 0) {
-        // FIXME: think of another good mechanism to switch between instruments
+        // FIXME: think of another good mechanism to switch between instruments and octaves
         if (sender.direction == UISwipeGestureRecognizerDirectionLeft) {
             DSLog(@"SwipeRecognized Left");
         } else if (sender.direction == UISwipeGestureRecognizerDirectionRight) {
