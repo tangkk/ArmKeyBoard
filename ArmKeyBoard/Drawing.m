@@ -39,34 +39,32 @@
 
 #pragma mark - Drawing
 
-+ (void) drawCircleWithCenter:(CGPoint)center Radius:(CGFloat)radius onImage:(UIImageView *)Img withbrush:(UInt16)brush
++ (void) drawCircleWithCenter:(CGPoint)center Radius:(CGFloat)radius onContext:(CGContextRef)ctx withbrush:(UInt16)brush
                           Red:(CGFloat)red Green:(CGFloat)green Blue:(CGFloat)blue Alpha:(CGFloat)opacity  Size:(CGSize)size{
-    UIGraphicsBeginImageContext(size);
-    [Img.image drawInRect:CGRectMake(0, 0, size.width, size.height)];
-    CGContextSetLineCap(UIGraphicsGetCurrentContext(), kCGLineCapRound);
-    CGContextSetLineWidth(UIGraphicsGetCurrentContext(), brush);
-    CGContextSetRGBStrokeColor(UIGraphicsGetCurrentContext(), red, green, blue, opacity);
+
+    CGContextSetLineCap(ctx, kCGLineCapRound);
+    CGContextSetLineWidth(ctx, brush);
+    CGContextSetRGBStrokeColor(ctx, red, green, blue, opacity);
     //Try drawing a circle
-    CGContextAddEllipseInRect(UIGraphicsGetCurrentContext(), CGRectMake(center.x-radius, center.y-radius, 2*radius, 2*radius));
-    CGContextStrokePath(UIGraphicsGetCurrentContext());
-    CGContextFlush(UIGraphicsGetCurrentContext());
-    Img.image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
+    CGContextAddEllipseInRect(ctx, CGRectMake(center.x-radius, center.y-radius, 2*radius, 2*radius));
+    CGContextStrokePath(ctx);
+    CGContextFlush(ctx);
+
 }
 
-+ (void) drawLineWithPreviousPoint:(CGPoint)PP CurrentPoint:(CGPoint)CP onImage:(UIImageView *)Img withbrush:(UInt16)brush
++ (void) drawLineWithPreviousPoint:(CGPoint)PP CurrentPoint:(CGPoint)CP onContext:(CGContextRef)ctx withbrush:(UInt16)brush
                                Red:(CGFloat)red Green:(CGFloat)green Blue:(CGFloat)blue Alpha:(CGFloat)opacity Size:(CGSize)size{
-    UIGraphicsBeginImageContext(size);
-    [Img.image drawInRect:CGRectMake(0, 0, size.width, size.height)];
-    CGContextMoveToPoint(UIGraphicsGetCurrentContext(), PP.x, PP.y);
-    CGContextAddLineToPoint(UIGraphicsGetCurrentContext(), CP.x, CP.y);
-    CGContextSetLineCap(UIGraphicsGetCurrentContext(), kCGLineCapRound);
-    CGContextSetLineWidth(UIGraphicsGetCurrentContext(), brush);
-    CGContextSetRGBStrokeColor(UIGraphicsGetCurrentContext(), red, green, blue, opacity);
-    CGContextSetBlendMode(UIGraphicsGetCurrentContext(), kCGBlendModeNormal);
-    CGContextStrokePath(UIGraphicsGetCurrentContext());
-    Img.image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
+    //UIGraphicsBeginImageContext(size);
+    //[Img.image drawInRect:CGRectMake(0, 0, size.width, size.height)];
+    CGContextMoveToPoint(ctx, PP.x, PP.y);
+    CGContextAddLineToPoint(ctx, CP.x, CP.y);
+    CGContextSetLineCap(ctx, kCGLineCapRound);
+    CGContextSetLineWidth(ctx, brush);
+    CGContextSetRGBStrokeColor(ctx, red, green, blue, opacity);
+    CGContextSetBlendMode(ctx, kCGBlendModeNormal);
+    CGContextStrokePath(ctx);
+    //Img.image = UIGraphicsGetImageFromCurrentImageContext();
+    //UIGraphicsEndImageContext();
 }
 
 @end

@@ -12,6 +12,8 @@
 // (Opencv2.framework doesn't seem to be supporting iPhone5s(64-bit architecture yet) according to:
 // http://code.opencv.org/projects/opencv/wiki/ChangeLog
 
+// FIXME: should disable the dragdown and dragup menu by iOS 7.
+
 #import "Definition.h"
 #import "Drawing.h"
 
@@ -32,6 +34,9 @@
 
 // CoreMotion headers
 #import <CoreMotion/CoreMotion.h>
+
+// CoreAnimation
+#import <QuartzCore/QuartzCore.h>
 
 // Opencv configuration
 //#define CANNY
@@ -99,6 +104,7 @@ using namespace std;
     CGFloat blue;
     CGFloat width;
     CGFloat height;
+    CALayer *customDrawn;
 }
 
 /* Gesture things and views*/
@@ -359,12 +365,29 @@ using namespace std;
     width = self.view.frame.size.width;
     height = self.view.frame.size.height;
     [_draw invalidate];
+    //_draw = [NSTimer scheduledTimerWithTimeInterval:0.03 target:self selector:@selector(processingDraw) userInfo:nil repeats:YES];
     [self.mainImage setAlpha:opacity];
     [self clearAnimationArrays];
 }
 
 - (void) otherSetup {
     _AKBType.tintColor = [UIColor whiteColor];
+    customDrawn = [CALayer layer];
+    customDrawn.delegate = self;
+    customDrawn.backgroundColor = [UIColor blackColor].CGColor;
+    customDrawn.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
+    //customDrawn.shadowOffset = CGSizeMake(0, 3);
+    //customDrawn.shadowRadius = 5.0;
+    //customDrawn.shadowColor = [UIColor blackColor].CGColor;
+    //customDrawn.shadowOpacity = 0.8;
+    //customDrawn.cornerRadius = 10.0;
+    //customDrawn.borderColor = [UIColor blackColor].CGColor;
+    //customDrawn.borderWidth = 2.0;
+    //customDrawn.masksToBounds = YES;
+    customDrawn.opacity = 0.0;
+    [self.view.layer addSublayer:customDrawn];
+    //[customDrawn setNeedsDisplay];
+
 }
 
 #pragma mark - opencv zone
@@ -759,10 +782,12 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
     if (_AKBType.selectedSegmentIndex == 0) {
         // Type 1 keyboard, go directly into the mapping
         [self regionToHierarchicalScale:currentCS.second withTonic:currentCS.first withOctave:currentOctave];
+        customDrawn.opacity = 1;
         _draw = [NSTimer scheduledTimerWithTimeInterval:0.03 target:self selector:@selector(processingDraw) userInfo:nil repeats:YES];
     } else {
         // Type 2 keyboard, go to the image selection and then mapping
         [self startMediaBrowserFromViewController:self usingDelegate:self];
+        customDrawn.opacity = 0.0;
         [_draw invalidate];
     }
 }
@@ -794,9 +819,9 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             imageOrientation = selectedImage.imageOrientation;
             
             //FIXME: whether to show the original image or the mixed image?
-            //_mainImage.image = [self opencvImageProcessing:selectedImage];
-            [self opencvImageProcessing:selectedImage];
-            _mainImage.image = selectedImage;
+            _mainImage.image = [self opencvImageProcessing:selectedImage];
+            //[self opencvImageProcessing:selectedImage];
+            //_mainImage.image = selectedImage;
             [self.view bringSubviewToFront:_mainImage];
             
             // Perform the algorithm on to the contours to produce the region-scale mapping
@@ -898,6 +923,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
                 vector<int> notes;
                 for (int j = mapstart; j < MIN(mapstart + number, scale.count); j++) {
                     notes.push_back([[scale objectAtIndex:j] intValue] + root);
+                    DSLog(@"note: %d", [[scale objectAtIndex:j] intValue] + root);
                 }
                 // Finally we insert an entry to the map
                 region2scale[contmark] = notes;
@@ -906,6 +932,7 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
                 // map regions to notes
                 vector<int> notes;
                 notes.push_back([[scale objectAtIndex:MIN(mapstart, scale.count - 1)] intValue] + root);
+                DSLog(@"note: %d", [[scale objectAtIndex:MIN(mapstart, scale.count - 1)] intValue] + root);
                 region2scale[contmark] = notes;
                 accum += ratio;
                 if (accum >= 1) {
@@ -954,6 +981,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     bool isInside = false;
     float dist;
     int contourNum;
+    int velocity;
     
     // The pass in x and y are the x,y value  to the screen space, we transform it to the image space
     int scaleX, scaleY;
@@ -965,46 +993,50 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     
     // RGB value
     int Red = 0, Green = 0, Blue = 0;
-    if (srcMat.rows > 0) {
-        NSLog(@"srcMat cols: %d, rows: %d", srcMat.cols, srcMat.rows);
-        NSLog(@"scaleX: %d, scale Y: %d", scaleX, scaleY);
-        Red = srcMat.at<cv::Vec4b>(scaleX, scaleY)[0];
-        Green = srcMat.at<cv::Vec4b>(scaleX, scaleY)[1];
-        Blue = srcMat.at<cv::Vec4b>(scaleX, scaleY)[2];
-        DSLog(@"RGB = %d, %d, %d", Red , Green, Blue);
-    }
     
-    // FIXME: how to make good use the dist information?
-    // FIXME: how to eliminate the need of the below calculation to determine in which contour the point is inside
-    //  Calculate the distance and scale it down the dist to the screen space, take the innermost contour's noteset.
-    for (int i = 0; i < mycontours.size(); i++) {
-        dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
-        if(dist > 0) {
-            dist /= distRatio;
-            NSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
-            isInside = true;
-            contourNum = contourmark[i];
-        }
-    }
-    
-    if (! isInside) {
-        NSLog(@"The current pos is in contour -1");
-        contourNum = -1;
-    }
-    DSLog(@"current pos x = %d, y = %d, contourNum = %d", x, y, contourNum);
-    vector <int> noteset = region2scale[contourNum];
-    
-    // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space
-    if (noteset.size() > 0) {
-        noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset, _AKBType.selectedSegmentIndex == 0, self.view.frame.size.height);
-    }
-    
-    int velocity;
     if (_AKBType.selectedSegmentIndex == 0) {
+        // Type 1 keyboard, play it linearly
+        vector <int> noteset = region2scale[-1];
+        noteNum = context2noteNum(x, y, 0, -1, Red, Green, Blue, noteset, true, self.view.frame.size.height);
         velocity = MIN((x * 127 / self.view.frame.size.width), 127);
     } else {
+        
+        if (srcMat.rows > 0) {
+            NSLog(@"srcMat cols: %d, rows: %d", srcMat.cols, srcMat.rows);
+            NSLog(@"scaleX: %d, scale Y: %d", scaleX, scaleY);
+            Red = srcMat.at<cv::Vec4b>(scaleX, scaleY)[0];
+            Green = srcMat.at<cv::Vec4b>(scaleX, scaleY)[1];
+            Blue = srcMat.at<cv::Vec4b>(scaleX, scaleY)[2];
+            DSLog(@"RGB = %d, %d, %d", Red , Green, Blue);
+        }
+        
+        // FIXME: how to make good use the dist information?
+        // FIXME: how to make the below calculation more effective?
+        //  Calculate the distance and scale it down the dist to the screen space, take the innermost contour's noteset.
+        for (int i = 0; i < mycontours.size(); i++) {
+            dist = (float)cv::pointPolygonTest( mycontours[i], cv::Point2f(scaleX,scaleY), true );
+            if(dist > 0) {
+                dist /= distRatio;
+                NSLog(@"The current pos is in contour  %d with distance %f", contourmark[i], dist);
+                isInside = true;
+                contourNum = contourmark[i];
+            }
+        }
+        
+        if (! isInside) {
+            NSLog(@"The current pos is in contour -1");
+            contourNum = -1;
+        }
+        DSLog(@"current pos x = %d, y = %d, contourNum = %d", x, y, contourNum);
+        vector <int> noteset = region2scale[contourNum];
+        
+        // Pass the context into the algorithm, where x, y, dist are all scaled to the screen space
+        if (noteset.size() > 0) {
+            noteNum = context2noteNum(x, y, dist, contourNum, Red, Green, Blue, noteset, false, self.view.frame.size.height);
+        }
         velocity = 127 - MIN(ABS(gravityY * 127), 127);
     }
+    
     MIDINote *Note = [[MIDINote alloc] initWithNote:noteNum duration:1 channel:currentInstrument velocity:velocity SysEx:0 Root:kMIDINoteOn];
     [_VI playMIDI:Note];
 }
@@ -1035,6 +1067,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     currentCSIdx = 0;
     totalCS = 0;
     isOneContour = false;
+    customDrawn.opacity = 0.0;
 }
 
 /******chord-scale zone ******/
@@ -1314,17 +1347,15 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
 
 #pragma mark - animation zone
 
-/***** This process is called once per 0.03 second to simulate the "processing"'s style http://www.processing.org of drawing ability ******/
-- (void)processingDraw {
-    [self doAnimation];
-}
-
-// This is a result of my processing simulation
-- (void) doAnimation {
+- (void)drawLayer:(CALayer *)layer inContext:(CGContextRef)context {
+    DSLog(@"drawLayer Called");
     // do some fading effect
-    [self fading];
+    CGContextSetRGBFillColor(context, 0, 0, 0, 0.1);
+    CGContextFillRect(context, CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height));
+    CGContextStrokePath(context);
+    CGContextFlush(context);
     
-    // do water effect
+    // do water drop effect
     for (int i = 0; i < AnimateArrayLength; i++) {
         if (animate[i]) {
             tick[i]++;
@@ -1333,27 +1364,23 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
                 animate[i] = false;
             }
             if (tick[i] > 30 && tick[i] <=45) {
-                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:2*(notePosReg[i]+2) onImage:self.mainImage withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
+                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:2*(notePosReg[i]+2) onContext:context withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
             }
             if (tick[i] > 15 && tick[i] <= 30) {
-                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:1.5*(notePosReg[i]+2) onImage:self.mainImage withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
+                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:1.5*(notePosReg[i]+2) onContext:context withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
             }
             if (tick[i] > 1 && tick[i] <= 15) {
-                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:(notePosReg[i]+2) onImage:self.mainImage withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
+                [Drawing drawCircleWithCenter:CGPointMake(mouseXReg[i], mouseYReg[i]) Radius:(notePosReg[i]+2) onContext:context withbrush:brush Red:red Green:green Blue:blue Alpha:opacity Size:self.view.frame.size];
             }
         }
     }
 }
 
-- (void) fading {
-    UIGraphicsBeginImageContext(self.view.frame.size);
-    [self.mainImage.image drawInRect:CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height) blendMode:kCGBlendModeNormal alpha:1.0];
-    CGContextSetRGBFillColor(UIGraphicsGetCurrentContext(), 0, 0, 0, 0.1);
-    CGContextFillRect(UIGraphicsGetCurrentContext(), CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height));
-    CGContextStrokePath(UIGraphicsGetCurrentContext());
-    CGContextFlush(UIGraphicsGetCurrentContext());
-    self.mainImage.image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
+
+/***** This process is called once per 0.03 second to simulate the "processing"'s style http://www.processing.org of drawing ability ******/
+- (void)processingDraw {
+    DSLog(@"processingDraw");
+    [customDrawn setNeedsDisplay];
 }
 
 - (void) tracePressedwithPos:(CGFloat)x andPos:(CGFloat)y notePos:(UInt16)Pos {

@@ -10,10 +10,10 @@
 
 @interface Drawing : UIViewController
 
-+ (void) drawCircleWithCenter:(CGPoint)center Radius:(CGFloat)radius onImage:(UIImageView *)Img withbrush:(UInt16)brush
++ (void) drawCircleWithCenter:(CGPoint)center Radius:(CGFloat)radius onContext:(CGContextRef)ctx withbrush:(UInt16)brush
                           Red:(CGFloat)red Green:(CGFloat)green Blue:(CGFloat)blue Alpha:(CGFloat)opacity Size:(CGSize)size;
 
-+ (void) drawLineWithPreviousPoint:(CGPoint)PP CurrentPoint:(CGPoint)CP onImage:(UIImageView *)Img withbrush:(UInt16)brush
++ (void) drawLineWithPreviousPoint:(CGPoint)PP CurrentPoint:(CGPoint)CP onContext:(CGContextRef)ctx withbrush:(UInt16)brush
                                Red:(CGFloat)red Green:(CGFloat)green Blue:(CGFloat)blue Alpha:(CGFloat)opacity Size:(CGSize)size;
 
 @end
