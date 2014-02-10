@@ -9,6 +9,7 @@
 #define AnimateArrayLength 10
 #define RegLength 5
 #define noteSize 15
+#define NOTENUM 21
 
 //#define TEST
 

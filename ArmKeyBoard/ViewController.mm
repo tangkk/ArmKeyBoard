@@ -58,7 +58,7 @@ using namespace std;
     float heightRatio;
     float distRatio;
     double imagesize, screensize;
-    double RPN15, RPN17;                    // region per note for 15 note scale or 17 note scale
+    double RPN1, RPN2;                    // region per note
     bool isOneContour;
     UIImageOrientation imageOrientation;
     
@@ -221,7 +221,7 @@ using namespace std;
     _scaleArray = [[NSArray alloc] initWithObjects:@"None", @"Lydian", @"Ionian", @"Mixolydian", @"Dorian", @"Aeolian", @"Phrygian",
                    @"Locrian", @"Lydianb7", @"Altered", @"SymDim", @"MelMinor", nil];
     _octaveArray = [[NSArray alloc] initWithObjects:@"0", @"1", @"2", @"3", @"4", @"5", @"6", @"7", nil];
-    _instrumentArray = [[NSArray alloc] initWithObjects:@Piano, @SteelGuitar, /*@Guitar, @Trombone, */@Vibraphone, nil];
+    _instrumentArray = [[NSArray alloc] initWithObjects:@Piano/*, @SteelGuitar, @Guitar, @Trombone, @Vibraphone*/, nil];
     _buttonClickedImg = [UIImage imageNamed:@"Chord-Scale-white"];
     _buttonUnClickedImg = [UIImage imageNamed:@"Chord-Scale"];
     currentCSTag = 0;
@@ -333,11 +333,11 @@ using namespace std;
     if (_VI == nil) {
         _VI = [[VirtualInstrument alloc] init];
         //[_VI setInstrument:@"Trombone" withInstrumentID:Trombone];
-        [_VI setInstrument:@"SteelGuitar" withInstrumentID:SteelGuitar];
+        //[_VI setInstrument:@"SteelGuitar" withInstrumentID:SteelGuitar];
         // FIXME: don't know why the "Guitar" does not work
         //[_VI setInstrument:@"Guitar" withInstrumentID:Guitar];
         [_VI setInstrument:@"Piano" withInstrumentID:Piano];
-        [_VI setInstrument:@"Vibraphone" withInstrumentID:Vibraphone];
+        //[_VI setInstrument:@"Vibraphone" withInstrumentID:Vibraphone];
     }
     
     if (_dict == nil) {
@@ -800,8 +800,8 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
         
         imagesize = selectedImage.size.width * selectedImage.size.height;
         screensize = self.view.frame.size.width * self.view.frame.size.height;
-        RPN15 = imagesize / 15;
-        RPN17 = imagesize / 17;
+        RPN1 = imagesize / NOTENUM;
+        RPN2 = imagesize / (NOTENUM+3);
         widthRatio = selectedImage.size.width / self.view.frame.size.width;
         heightRatio = selectedImage.size.height / self.view.frame.size.height;
         distRatio = sqrt(widthRatio*widthRatio + heightRatio*heightRatio);
@@ -903,9 +903,9 @@ static bool vectorCompare (vector<int>A, vector<int> B) {
             
             float ratio;
             if ([scaleName isEqualToString:@"Altered"] || [scaleName isEqualToString:@"SymDim"]) {
-                ratio = contourarea / RPN17;
+                ratio = contourarea / RPN2;
             } else {
-                ratio = contourarea / RPN15;
+                ratio = contourarea / RPN1;
             }
             int contmark = contourmark[i];
             DSLog(@"contmark: %d", contmark);
@@ -959,6 +959,7 @@ static int context2noteNum (int x, int y, float dist, int contourNum, int R, int
     int numberofNotes = (int) noteset.size();
     // Make sure every note within this region get chance to show up
     // A simple but workable approach:
+    NSLog(@"number of notes = %d", numberofNotes);
     int noteIdx;
     if (oneContour) {
         // regress to the simple linear keyboard layout
